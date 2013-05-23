@@ -17,7 +17,7 @@ package com.bunnybones.particleMeshToy.geom
 			this.vertex1 = vertex1;
 			this.vertex2 = vertex2;
 			triangles = new Vector.<Triangle>;
-			boundingBox = new Rectangle();
+			boundingBox = new BoundingBox();
 			updateBoundingBox();
 		}
 		

@@ -6,8 +6,8 @@
     <movie input="" />
     <movie path="bin\ParticleMeshToyAIR.swf" />
     <movie fps="30" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie width="900" />
+    <movie height="900" />
     <movie version="3" />
     <movie minorVersion="5" />
     <movie platform="AIR" />

@@ -8,16 +8,16 @@ package com.bunnybones.particleMeshToy.geom
 	{
 		private var _x:Number;
 		private var _y:Number;
-		private var _edges:Edge;
+		private var _edges:Vector.<Edge>;
 		
 		public function Vertex(x:Number, y:Number) 
 		{
 			this.x = x;
 			this.y = y;
-			_edges = new Vector<Edge>;
+			_edges = new Vector.<Edge>;
 		}
 		
-		public function get edges():Edge 
+		public function get edges():Vector.<Edge> 
 		{
 			return _edges;
 		}
