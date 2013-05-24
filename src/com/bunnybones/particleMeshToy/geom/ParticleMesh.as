@@ -12,13 +12,11 @@ package com.bunnybones.particleMeshToy.geom
 	public class ParticleMesh 
 	{
 		private var _polygons:Vector.<Polygon>;
-		private var _vertices:Vector.<Vertex>;
 		
 		
 		public function ParticleMesh() 
 		{
 			_polygons = new Vector.<Polygon>;
-			_vertices = new Vector.<Vertex>;
 			newPolyFromCorners(	new Vertex( -1, -1),
 								new Vertex(1, -1),
 								new Vertex(-1, 1),
@@ -27,11 +25,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function newPolyFromCorners(vertex1:Vertex, vertex2:Vertex, vertex3:Vertex, vertex4:Vertex):void 
 		{
-			_vertices.push(vertex1, vertex2, vertex3, vertex4);
-			var polygon:Polygon = new Polygon(	new Triangle(	new Edge(vertex1, vertex2),
-																vertex3),
-												new Triangle(	new Edge(vertex3, vertex4),
-																vertex2));
+			var polygon:Polygon = new Polygon(vertex1, vertex2, vertex3, vertex4);
 			_polygons.push(polygon);
 		}
 		
@@ -55,21 +49,24 @@ package com.bunnybones.particleMeshToy.geom
 					}
 					g.endFill();
 				}
-			}
 			
-			//vertices
-			g.lineStyle(3, 0x0000ff, 1);
-			for each(v in _vertices) {
-				p = viewMatrix.transformPoint(new Point(v.x, v.y));
-				g.moveTo(p.x, p.y);
-				g.lineTo(p.x + 1, p.y);
+				//vertices
+				g.lineStyle(3, 0x0000ff, 1);
+				for each(v in polygon.vertices) {
+					p = viewMatrix.transformPoint(new Point(v.x, v.y));
+					g.moveTo(p.x, p.y);
+					g.lineTo(p.x + 1, p.y);
+				}
+				g.lineStyle(0, 0, 0);
 			}
-			g.lineStyle(0, 0, 0);
 		}
 		
 		public function addRandomVertices(total:int):void 
 		{
-			_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+			for (var i:int = 0; i < total; i++) 
+			{
+				_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+			}
 		}
 		
 	}

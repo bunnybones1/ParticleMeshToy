@@ -16,6 +16,7 @@
   <!-- Other classes to be compiled into your SWF -->
   <classpaths>
     <class path="src" />
+    <class path="lib\as3-signals\src" />
   </classpaths>
   <!-- Build options -->
   <build>

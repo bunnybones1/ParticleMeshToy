@@ -14,7 +14,7 @@ package com.bunnybones.particleMeshToy
 		public function Main():void 
 		{
 			var particleMesh:ParticleMesh = new ParticleMesh();
-			particleMesh.addRandomVertices(1);
+			particleMesh.addRandomVertices(400);
 			var viewMatrix:Matrix = new Matrix();
 			viewMatrix.translate(1, 1);
 			viewMatrix.scale(400, 400);
