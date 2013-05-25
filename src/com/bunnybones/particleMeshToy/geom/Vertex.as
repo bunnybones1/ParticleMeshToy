@@ -72,11 +72,9 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			for each(var edge:Edge in _edges) {
 				if (edge.connects(this, vertex)) {
-					trace("reusing");
 					return edge;
 				}
 			}
-			trace("new");
 			return new Edge(vertex, this);
 		}
 		

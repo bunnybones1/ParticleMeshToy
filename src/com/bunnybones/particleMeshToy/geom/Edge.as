@@ -13,11 +13,13 @@ package com.bunnybones.particleMeshToy.geom
 		private var _boundingBox:BoundingBox;
 		private var _destroyer:Signal = new Signal(Edge);
 		private var _updater:Signal = new Signal(Edge);
+		private var _triangles:Vector.<Triangle>;
 		
 		public function Edge(vertex1:Vertex, vertex2:Vertex) 
 		{
 			this._vertex1 = vertex1;
 			this._vertex2 = vertex2;
+			_triangles = new Vector.<Triangle>;
 			_vertex1.registerEdge(this);
 			_vertex2.registerEdge(this);
 			vertex1.updater.add(onVertexUpdated);
@@ -41,7 +43,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function destroy():void 
 		{
-			_destroyer.dispatch();
+			_destroyer.dispatch(this);
 			_updater.removeAll();
 			_destroyer.removeAll();
 			_destroyer = null;
@@ -63,6 +65,17 @@ package com.bunnybones.particleMeshToy.geom
 			if (_vertex1 == vertex1 && _vertex2 == vertex2) return true;
 			else if (_vertex1 == vertex2 && _vertex2 == vertex1) return true;
 			return false;
+		}
+		
+		public function registerTriangle(triangle:Triangle):void 
+		{
+			triangle.destroyer.add(onTriangleDestroyed);
+			_triangles.push(triangle);
+		}
+		
+		private function onTriangleDestroyed(triangle:Triangle):void 
+		{
+			_triangles.splice(_triangles.indexOf(triangle), 1);
 		}
 		
 		public function get destroyer():Signal 
@@ -88,6 +101,21 @@ package com.bunnybones.particleMeshToy.geom
 		public function get vertex1():Vertex 
 		{
 			return _vertex1;
+		}
+		
+		public function get hasTwoTriangles():Boolean 
+		{
+			return _triangles.length == 2;
+		}
+		
+		public function get triangles():Vector.<Triangle> 
+		{
+			return _triangles;
+		}
+		
+		public function get length():Number 
+		{
+			return Math.sqrt(Math.pow(vertex1.x - vertex2.x, 2) + Math.pow(vertex1.y - vertex2.y, 2));
 		}
 		
 	}

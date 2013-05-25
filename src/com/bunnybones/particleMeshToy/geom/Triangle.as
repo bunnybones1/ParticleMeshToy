@@ -21,6 +21,7 @@ package com.bunnybones.particleMeshToy.geom
 			_vertices.push(edge.vertex1, edge.vertex2, vertex);
 			_edges.push(edge, edge.vertex1.connect(vertex), edge.vertex2.connect(vertex));
 			for each(var edge:Edge in _edges) {
+				edge.registerTriangle(this);
 				edge.updater.add(onEdgeUpdated);
 				edge.destroyer.add(onEdgeDestroyed);
 			}
@@ -54,6 +55,8 @@ package com.bunnybones.particleMeshToy.geom
 			
 			var i:int;
 			for (i = 0; i < _edges.length; ++i) {
+				_edges[i].updater.remove(onEdgeUpdated);
+				_edges[i].destroyer.remove(onEdgeDestroyed);
 				_edges[i] = null;
 			}
 			for (i = 0; i < _vertices.length; ++i) {
@@ -61,6 +64,14 @@ package com.bunnybones.particleMeshToy.geom
 			}
 			
 			_boundingBox = null;
+		}
+		
+		public function vertexOppositeEdge(edge:Edge):Vertex
+		{
+			for each(var vertex:Vertex in _vertices) {
+				if (edge.vertex1 != vertex && edge.vertex2 != vertex) return vertex;
+			}
+			return null;
 		}
 		
 		public function get vertices():Vector.<Vertex> 

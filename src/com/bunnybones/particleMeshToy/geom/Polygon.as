@@ -66,22 +66,45 @@ package com.bunnybones.particleMeshToy.geom
 					trace("No triangles contain this vertex");
 					break;
 				default:
-					throw new Error("vertex is contained by multiple triangles. You have overlapping triangles, apparently.");
+					//throw new Error("vertex is contained by multiple triangles. You have overlapping triangles, apparently.");
 			}
 		}
 		
 		private function subdivideTriangle(triangle:Triangle, vertex:Vertex):void 
 		{
+			var edge:Edge;
 			//replace it with 3 triangles that reuse the old outer edges
-			for each(var edge:Edge in triangle.edges) {
+			for each(edge in triangle.edges) {
 				var newTriangle:Triangle = new Triangle(edge, vertex);
 				newTriangle.destroyer.add(onTriangleDestroyed);
 				_triangles.push(newTriangle);
 			}
-			//check the triangles adjacent to the outer border of the old triangle and retriangulate if necessary
 			
+			//save the old edges
+			var oldEdges:Vector.<Edge> = triangle.edges.slice(0, 3);
 			//destroy the old triangle
 			triangle.destroy();
+			
+			//check the triangles adjacent to the outer border of the old triangle and retriangulate if necessary
+			for each(var edge:Edge in oldEdges) {
+				if(edge.hasTwoTriangles) retriangulate(edge);
+			}
+		}
+		
+		private function retriangulate(edge:Edge):void 
+		{
+			var newEdge:Edge = new Edge(edge.triangles[0].vertexOppositeEdge(edge), edge.triangles[1].vertexOppositeEdge(edge));
+			if (newEdge.length < edge.length) {
+				var oldVertex1:Vertex = edge.vertex1;
+				var oldVertex2:Vertex = edge.vertex2;
+				edge.destroy();
+				var triangle1:Triangle = new Triangle(newEdge, oldVertex1)
+				var triangle2:Triangle = new Triangle(newEdge, oldVertex2)
+				triangle1.destroyer.add(onTriangleDestroyed);
+				triangle2.destroyer.add(onTriangleDestroyed);
+				_triangles.push(triangle1, triangle2);
+				//check for concave polygons
+			}
 		}
 		
 		public function get triangles():Vector.<Triangle> 
