@@ -6,6 +6,7 @@ package com.bunnybones.particleMeshToy.geom
 	import flash.geom.Matrix;
 	import com.bunnybones.particleMeshToy.Main;
 	import flash.geom.Point;
+	import flash.utils.ByteArray;
 	/**
 	 * ...
 	 * @author Tomasz Dysinski
@@ -113,6 +114,18 @@ package com.bunnybones.particleMeshToy.geom
 			for each(var polygon:Polygon in _polygons) {
 				polygon.relax();
 			}
+		}
+		
+		public function serialize(bytes:ByteArray):ByteArray
+		{
+			var header:String = "ParticleMesh. Read uint for size of data block containing particle stream (float x, float y, float radius).";
+			var headerBytes:ByteArray = new ByteArray();
+			headerBytes.writeUTF(header);
+			bytes.writeBytes(headerBytes);
+			for each(var polygon:Polygon in _polygons) {
+				polygon.serialize(bytes);
+			}
+			return bytes;
 		}
 		
 		public function set distributionMap(mapData:BitmapData):void 

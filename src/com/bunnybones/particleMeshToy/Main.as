@@ -6,6 +6,7 @@ package com.bunnybones.particleMeshToy
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.geom.Matrix;
+	import flash.ui.Keyboard;
 	
 	/**
 	 * ...
@@ -15,7 +16,7 @@ package com.bunnybones.particleMeshToy
 	{
 		[Embed(source = "../../../../bin/distribution.png")]
 		private static const distributionImage:Class;
-		private var particleMesh:ParticleMesh;
+		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
 		private var iterations:int = 0;
 		public function Main():void 
@@ -29,7 +30,7 @@ package com.bunnybones.particleMeshToy
 			
 			particleMesh = new ParticleMesh();
 			particleMesh.distributionMap = distributionMap.bitmapData;
-			particleMesh.addRandomVertices(120 * 80 * .01);
+			particleMesh.addRandomVertices(120 * 80 * .05);
 			particleMesh.draw(this, viewMatrix);
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
@@ -41,6 +42,18 @@ package com.bunnybones.particleMeshToy
 				stage.removeEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
 				iterations = e.keyCode - 48;
 			}
+			if (e.ctrlKey) {
+				switch(e.keyCode) {
+					case Keyboard.S:
+						save();
+						break;
+				}
+			}
+		}
+		
+		protected function save():void 
+		{
+			trace("saving");
 		}
 		
 		private function onEnterFrame(e:Event):void 

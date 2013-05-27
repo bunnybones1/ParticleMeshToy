@@ -1,6 +1,7 @@
 package com.bunnybones.particleMeshToy.geom 
 {
 	import flash.geom.Rectangle;
+	import flash.utils.ByteArray;
 	import org.osflash.signals.Signal;
 	/**
 	 * ...
@@ -92,16 +93,30 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function generateAlpha():Number 
 		{
-			return .5;
+			return 1;
 			//return 1-Math.pow(1-Math.min(1, .0001/generateArea()), 6);
 		}
 		
 		public function relax():void 
 		{
-			var averageLength:Number = (_edges[0].length + _edges[1].length + _edges[2].length) / 3;
 			for each(var edge:Edge in _edges) {
-				edge.relax(averageLength);
+				edge.relax(averageEdgeLength);
 			}
+		}
+		
+		public function serialize(bytes:ByteArray):ByteArray
+		{
+			//3 floats (x, y, radius)
+			//position
+			getCenter().serialize(bytes);
+			//radius
+			bytes.writeFloat(averageEdgeLength);
+			return bytes;
+		}
+		
+		private function getCenter():Vertex
+		{
+			return _vertices[0].clone().add(_vertices[1]).add(_vertices[2]).scale(MathUtils.A_THIRD, MathUtils.A_THIRD);
 		}
 		
 		private function generateArea():Number
@@ -135,6 +150,11 @@ package com.bunnybones.particleMeshToy.geom
 		public function get updater():Signal 
 		{
 			return _updater;
+		}
+		
+		public function get averageEdgeLength():Number 
+		{
+			return (_edges[0].length + _edges[1].length + _edges[2].length) / 3;
 		}
 		
 	}

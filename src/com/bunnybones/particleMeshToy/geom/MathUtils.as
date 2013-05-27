@@ -6,6 +6,7 @@ package com.bunnybones.particleMeshToy.geom
 	 */
 	public class MathUtils 
 	{
+		static public const A_THIRD:Number = 1 / 3;
 		
 		public function MathUtils() 
 		{

@@ -1,6 +1,7 @@
 package com.bunnybones.particleMeshToy.geom 
 {
 	import flash.geom.Rectangle;
+	import flash.utils.ByteArray;
 	/**
 	 * ...
 	 * @author Tomasz Dysinski
@@ -73,6 +74,8 @@ package com.bunnybones.particleMeshToy.geom
 		public function retriangulateAll():void 
 		{
 			var oldTriangles:Vector.<Triangle> = _triangles.slice(0, _triangles.length);
+			trace(_triangles.length);
+			trace(_vertices.length);
 			for (var i:int = 0; i < oldTriangles.length ; i++) {
 				var triangle:Triangle = oldTriangles[i];
 				if (triangle.status == Triangle.STATUS_GOOD) {
@@ -88,6 +91,14 @@ package com.bunnybones.particleMeshToy.geom
 			for each(var triangle:Triangle in _triangles) {
 				triangle.relax();
 			}
+		}
+		
+		public function serialize(bytes:ByteArray):ByteArray
+		{
+			for each(var triangle:Triangle in _triangles) {
+				triangle.serialize(bytes);
+			}
+			return bytes;
 		}
 		
 		private function subdivideTriangle(triangle:Triangle, vertex:Vertex):void 

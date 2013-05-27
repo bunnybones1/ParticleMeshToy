@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.geom 
 {
+	import flash.utils.ByteArray;
 	import org.osflash.signals.Signal;
 	/**
 	 * ...
@@ -167,6 +168,13 @@ package com.bunnybones.particleMeshToy.geom
 			var magnitude:Number = Math.sqrt(Math.pow(_x, 2) + Math.pow(_y, 2));
 			x *= value / magnitude;
 			y *= value / magnitude;
+		}
+		
+		public function serialize(bytes:ByteArray):ByteArray
+		{
+			bytes.writeFloat(_x);
+			bytes.writeFloat(_y);
+			return bytes;
 		}
 	}
 
