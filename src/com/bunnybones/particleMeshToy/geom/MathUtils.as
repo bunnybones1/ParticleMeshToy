@@ -19,6 +19,7 @@ package com.bunnybones.particleMeshToy.geom
 
 		public static function pointInTriangle(p:Vertex, triangle:Triangle):Boolean
 		{
+			if (!triangle.boundingBox.contains(p)) return false;
 			var b1:Boolean = sign(p, triangle.vertices[0], triangle.vertices[1]) < 0;
 			var b2:Boolean = sign(p, triangle.vertices[1], triangle.vertices[2]) < 0;
 			var b3:Boolean = sign(p, triangle.vertices[2], triangle.vertices[0]) < 0;

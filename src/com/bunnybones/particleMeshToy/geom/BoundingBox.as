@@ -51,6 +51,16 @@ package com.bunnybones.particleMeshToy.geom
 			return this;
 		}
 		
+		public function contains(p:Vertex):Boolean 
+		{
+			if (xMin < p.x && p.x <= xMax) {
+				if (yMin < p.y && p.y <= yMax) return true;
+				else return false;
+			} else {
+				return false;
+			}
+		}
+		
 	}
 
 }

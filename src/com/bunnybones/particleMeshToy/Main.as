@@ -20,9 +20,6 @@ package com.bunnybones.particleMeshToy
 			particleMesh.retriangulate();
 			particleMesh.retriangulate();
 			particleMesh.retriangulate();
-			particleMesh.retriangulate();
-			particleMesh.retriangulate();
-			particleMesh.retriangulate();
 			var viewMatrix:Matrix = new Matrix();
 			viewMatrix.translate(1, 1);
 			viewMatrix.scale(400, 400);
