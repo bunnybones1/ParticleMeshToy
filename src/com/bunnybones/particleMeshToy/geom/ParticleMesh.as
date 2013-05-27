@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.geom 
 {
+	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
 	import flash.geom.Matrix;
@@ -11,7 +12,10 @@ package com.bunnybones.particleMeshToy.geom
 	 */
 	public class ParticleMesh 
 	{
+		private var _distributionMap:BitmapData;
 		private var _polygons:Vector.<Polygon>;
+		private var _distributionIndex:Vector.<Vector.<Vertex>>;
+		private var _distributionIndexLinear:Vector.<Vector.<Vertex>>;
 		
 		
 		public function ParticleMesh() 
@@ -35,6 +39,7 @@ package com.bunnybones.particleMeshToy.geom
 			var p:Point;
 			var g:Graphics = target.graphics;
 			
+			g.clear();
 			//triangles
 			for each(var polygon:Polygon in _polygons) {
 				for each(var triangle:Triangle in polygon.triangles) {
@@ -65,8 +70,27 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			for (var i:int = 0; i < total; i++) 
 			{
-				_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+				if (_distributionMap) {
+					_polygons[0].insertVertex(sampleDistributionMap().scale(2, 2).offset(-1,-1));
+				} else {
+					_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+				}
 			}
+		}
+		
+		private function sampleDistributionMap():Vertex
+		{
+			var vertex:Vertex;
+			while(!vertex) {
+				//var valueIndex:int = int((1 - Math.pow(Math.random(), 3)) * 256);
+				var valueIndex:int = Math.random() * _distributionIndexLinear.length;
+				//var vertices:Vector.<Vertex> = _distributionIndex[valueIndex];
+				var vertices:Vector.<Vertex> = _distributionIndexLinear[valueIndex];
+				if(vertices.length > 0) {
+					vertex = vertices[int(Math.random() * vertices.length)];
+				}
+			}
+			return vertex.clone();
 		}
 		
 		public function retriangulate():void 
@@ -75,6 +99,37 @@ package com.bunnybones.particleMeshToy.geom
 			for each(var polygon:Polygon in _polygons) {
 				polygon.retriangulateAll();
 			}
+		}
+		
+		public function set distributionMap(mapData:BitmapData):void 
+		{
+			_distributionMap = mapData;
+			_distributionIndex = new Vector.<Vector.<Vertex>>;
+			var valueCounts:Vector.<int> = new Vector.<int>;
+			for (var i:int = 0; i < 256; i++) {
+				var valueIndex:Vector.<Vertex> = new Vector.<Vertex>;
+				_distributionIndex.push(valueIndex);
+				valueCounts[i] = 0;
+			}
+			var width:Number = _distributionMap.width;
+			var height:Number = _distributionMap.height;
+			for (var iy:int = 0; iy < height; ++iy) {
+				for (var ix:int = 0; ix < width; ++ix) {
+					var value:uint = (mapData.getPixel(ix, iy) >> 16 ) & 0xFF;
+					_distributionIndex[value].push(new Vertex(ix / width, iy / height));
+					valueCounts[value]++;
+				}
+			}
+			
+			_distributionIndexLinear = new Vector.<Vector.<Vertex>>;
+			for (var j:int = 255; j >= 0; --j) {
+				for (var k:int = 0; k < j; ++k) {
+					for (var ivc:int = 0; ivc < valueCounts[j]; ++ivc) {
+						_distributionIndexLinear.push(_distributionIndex[j]);
+					}
+				}
+			}
+			trace(_distributionIndexLinear.length);
 		}
 		
 	}

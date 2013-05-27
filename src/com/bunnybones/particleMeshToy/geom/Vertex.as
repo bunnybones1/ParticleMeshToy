@@ -82,6 +82,25 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			_edges.push(edge);
 		}
+		
+		public function clone():Vertex 
+		{
+			return new Vertex(x, y);
+		}
+		
+		public function scale(scaleX:Number, scaleY:Number):Vertex
+		{
+			x *= scaleX;
+			y *= scaleY;
+			return this;
+		}
+		
+		public function offset(offsetX:Number, offsetY:Number):Vertex
+		{
+			x += offsetX;
+			y += offsetY;
+			return this;
+		}
 	}
 
 }

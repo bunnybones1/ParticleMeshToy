@@ -115,8 +115,8 @@ package com.bunnybones.particleMeshToy.geom
 				var oldVertex2:Vertex = edge.vertex2;
 				if (MathUtils.edgeIsFlanked(newEdge, oldVertex1, oldVertex2)) {
 					edge.destroy();
-					var triangle1:Triangle = new Triangle(newEdge, oldVertex1)
-					var triangle2:Triangle = new Triangle(newEdge, oldVertex2)
+					var triangle1:Triangle = new Triangle(newEdge, oldVertex1);
+					var triangle2:Triangle = new Triangle(newEdge, oldVertex2);
 					triangle1.destroyer.add(onTriangleDestroyed);
 					triangle2.destroyer.add(onTriangleDestroyed);
 					_triangles.push(triangle1, triangle2);
