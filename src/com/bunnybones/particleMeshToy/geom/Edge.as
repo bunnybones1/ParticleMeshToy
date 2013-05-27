@@ -105,7 +105,9 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function get hasTwoTriangles():Boolean 
 		{
-			return _triangles.length == 2;
+			if (_triangles.length != 2) return false;
+			if (_triangles[0].status == Triangle.STATUS_GOOD && _triangles[1].status == Triangle.STATUS_GOOD) return true;
+			else return false;
 		}
 		
 		public function get triangles():Vector.<Triangle> 

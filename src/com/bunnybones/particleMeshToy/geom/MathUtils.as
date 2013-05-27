@@ -25,6 +25,13 @@ package com.bunnybones.particleMeshToy.geom
 			
 			return ((b1 == b2) && (b2 == b3));
 		}
+		
+		static public function edgeIsFlanked(edge:Edge, vertex1:Vertex, vertex2:Vertex):Boolean 
+		{
+			var b1:Boolean = sign(vertex1, edge.vertex1, edge.vertex2) < 0;
+			var b2:Boolean = sign(vertex2, edge.vertex1, edge.vertex2) < 0;
+			return (b1 != b2);
+		}
 	}
 
 }

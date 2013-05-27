@@ -70,6 +70,19 @@ package com.bunnybones.particleMeshToy.geom
 			}
 		}
 		
+		public function retriangulateAll():void 
+		{
+			var oldTriangles:Vector.<Triangle> = _triangles.slice(0, _triangles.length);
+			for (var i:int = 0; i < oldTriangles.length ; i++) {
+				var triangle:Triangle = oldTriangles[i];
+				if (triangle.status == Triangle.STATUS_GOOD) {
+					for each (var edge:Edge in triangle.edges) {
+						retriangulate(edge);
+					}
+				}
+			}
+		}
+		
 		private function subdivideTriangle(triangle:Triangle, vertex:Vertex):void 
 		{
 			var edge:Edge;
@@ -86,24 +99,30 @@ package com.bunnybones.particleMeshToy.geom
 			triangle.destroy();
 			
 			//check the triangles adjacent to the outer border of the old triangle and retriangulate if necessary
-			for each(var edge:Edge in oldEdges) {
-				if(edge.hasTwoTriangles) retriangulate(edge);
+			for each(edge in oldEdges) {
+				retriangulate(edge);
 			}
 		}
 		
 		private function retriangulate(edge:Edge):void 
 		{
+			if (!edge) return;
+			if (!edge.hasTwoTriangles) return;
 			var newEdge:Edge = new Edge(edge.triangles[0].vertexOppositeEdge(edge), edge.triangles[1].vertexOppositeEdge(edge));
 			if (newEdge.length < edge.length) {
+				//check for concave polygons
 				var oldVertex1:Vertex = edge.vertex1;
 				var oldVertex2:Vertex = edge.vertex2;
-				edge.destroy();
-				var triangle1:Triangle = new Triangle(newEdge, oldVertex1)
-				var triangle2:Triangle = new Triangle(newEdge, oldVertex2)
-				triangle1.destroyer.add(onTriangleDestroyed);
-				triangle2.destroyer.add(onTriangleDestroyed);
-				_triangles.push(triangle1, triangle2);
-				//check for concave polygons
+				if (MathUtils.edgeIsFlanked(newEdge, oldVertex1, oldVertex2)) {
+					edge.destroy();
+					var triangle1:Triangle = new Triangle(newEdge, oldVertex1)
+					var triangle2:Triangle = new Triangle(newEdge, oldVertex2)
+					triangle1.destroyer.add(onTriangleDestroyed);
+					triangle2.destroyer.add(onTriangleDestroyed);
+					_triangles.push(triangle1, triangle2);
+				} else {
+					//trace("New edge was not flanked, so not retriangulated.");
+				}
 			}
 		}
 		

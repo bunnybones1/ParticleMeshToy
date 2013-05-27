@@ -49,7 +49,7 @@ package com.bunnybones.particleMeshToy.geom
 					}
 					g.endFill();
 				}
-			
+			return;
 				//vertices
 				g.lineStyle(3, 0x0000ff, 1);
 				for each(v in polygon.vertices) {
@@ -66,6 +66,14 @@ package com.bunnybones.particleMeshToy.geom
 			for (var i:int = 0; i < total; i++) 
 			{
 				_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+			}
+		}
+		
+		public function retriangulate():void 
+		{
+			trace("retriangulating");
+			for each(var polygon:Polygon in _polygons) {
+				polygon.retriangulateAll();
 			}
 		}
 		

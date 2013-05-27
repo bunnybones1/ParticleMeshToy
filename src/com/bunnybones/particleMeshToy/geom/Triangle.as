@@ -8,6 +8,9 @@ package com.bunnybones.particleMeshToy.geom
 	 */
 	public class Triangle 
 	{
+		public var status:String;
+		static public const STATUS_GOOD:String = "statusGood";
+		static public const STATUS_DEAD:String = "statusDead";
 		private var _vertices:Vector.<Vertex>;
 		private var _edges:Vector.<Edge>;
 		//private var polygon:Polygon;
@@ -27,6 +30,7 @@ package com.bunnybones.particleMeshToy.geom
 			}
 			_boundingBox = new BoundingBox();
 			updateBoundingBox();
+			status = STATUS_GOOD;
 		}
 		
 		private function onEdgeDestroyed(edge:Edge):void 
@@ -64,6 +68,8 @@ package com.bunnybones.particleMeshToy.geom
 			}
 			
 			_boundingBox = null;
+			
+			status = STATUS_DEAD;
 		}
 		
 		public function vertexOppositeEdge(edge:Edge):Vertex
