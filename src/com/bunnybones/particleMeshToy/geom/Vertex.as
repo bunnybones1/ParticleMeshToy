@@ -7,17 +7,22 @@ package com.bunnybones.particleMeshToy.geom
 	 */
 	public class Vertex 
 	{
+		static private var _ID:uint = 0;
 		private var _x:Number;
 		private var _y:Number;
 		private var _edges:Vector.<Edge>;
 		private var _destroyer:Signal = new Signal(Vertex);
 		private var _updater:Signal = new Signal(Vertex);
+		private var _weight:Number;
+		private var _id:uint;
 		
-		public function Vertex(x:Number, y:Number) 
+		public function Vertex(x:Number, y:Number, weight:Number = 1) 
 		{
-			this.x = x;
-			this.y = y;
+			_x = x;
+			_y = y;
+			_weight = weight;
 			_edges = new Vector.<Edge>;
+			_id = Vertex.ID;
 		}
 		
 		public function get x():Number 
@@ -27,6 +32,12 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function set x(value:Number):void 
 		{
+			if (isNaN(value)) {
+				trace("!");
+			}
+			if (value < -2000 || value > 2000) {
+				trace("?");
+			}
 			_x = value;
 			_updater.dispatch(this);
 		}
@@ -38,6 +49,12 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function set y(value:Number):void 
 		{
+			if (isNaN(value)) {
+				trace("!");
+			}
+			if (value < -2000 || value > 12000) {
+				trace("?");
+			}
 			_y = value;
 			_updater.dispatch(this);
 		}
@@ -61,8 +78,30 @@ package com.bunnybones.particleMeshToy.geom
 			return _updater;
 		}
 		
+		public function get weight():Number 
+		{
+			return _weight;
+		}
+		
+		static public function get ID():uint 
+		{
+			_ID++;
+			return _ID;
+		}
+		
+		public function get id():uint 
+		{
+			return _id;
+		}
+		
 		public function setXY(x:Number, y:Number):void
 		{
+			if (isNaN(x)) {
+				trace("!");
+			}
+			if (isNaN(y)) {
+				trace("!");
+			}
 			_x = x;
 			_y = y;
 			_updater.dispatch(this);
@@ -100,6 +139,34 @@ package com.bunnybones.particleMeshToy.geom
 			x += offsetX;
 			y += offsetY;
 			return this;
+		}
+		
+		public function invert():Vertex
+		{
+			x = -x;
+			y = -y;
+			return this;
+		}
+		
+		public function add(vertex:Vertex):Vertex
+		{
+			this.x += vertex.x;
+			this.y += vertex.y;
+			return this;
+		}
+		
+		public function subtract(vertex:Vertex):Vertex
+		{
+			this.x -= vertex.x;
+			this.y -= vertex.y;
+			return this;
+		}
+		
+		public function normalize(value:Number = 1):void 
+		{
+			var magnitude:Number = Math.sqrt(Math.pow(_x, 2) + Math.pow(_y, 2));
+			x *= value / magnitude;
+			y *= value / magnitude;
 		}
 	}
 

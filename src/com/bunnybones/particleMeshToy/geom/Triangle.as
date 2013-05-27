@@ -80,6 +80,38 @@ package com.bunnybones.particleMeshToy.geom
 			return null;
 		}
 		
+		public function generateColor():uint 
+		{
+			var a:Vertex = _vertices[0];
+			var b:Vertex = _vertices[1];
+			var c:Vertex = _vertices[2];
+			return 0xffffff * ((a.id * b.id * c.id * .000001) % 1);
+			//return 0xffffff * (Math.sin(a.x +b.x + c.x + a.y + b.y + c.y) * .5 + .5);
+			//return Math.random() * 0xffffff;
+		}
+		
+		public function generateAlpha():Number 
+		{
+			return .5;
+			//return 1-Math.pow(1-Math.min(1, .0001/generateArea()), 6);
+		}
+		
+		public function relax():void 
+		{
+			var averageLength:Number = (_edges[0].length + _edges[1].length + _edges[2].length) / 3;
+			for each(var edge:Edge in _edges) {
+				edge.relax(averageLength);
+			}
+		}
+		
+		private function generateArea():Number
+		{
+			var a:Vertex = _vertices[0];
+			var b:Vertex = _vertices[1];
+			var c:Vertex = _vertices[2];
+			return Math.abs((a.x - c.x) * (b.y - a.y) - (a.x - b.x) * (c.y - a.y)) * .5;
+		}
+		
 		public function get vertices():Vector.<Vertex> 
 		{
 			return _vertices;

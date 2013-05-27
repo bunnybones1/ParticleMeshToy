@@ -83,6 +83,13 @@ package com.bunnybones.particleMeshToy.geom
 			}
 		}
 		
+		public function relax():void 
+		{
+			for each(var triangle:Triangle in _triangles) {
+				triangle.relax();
+			}
+		}
+		
 		private function subdivideTriangle(triangle:Triangle, vertex:Vertex):void 
 		{
 			var edge:Edge;

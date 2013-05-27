@@ -16,15 +16,19 @@ package com.bunnybones.particleMeshToy.geom
 		private var _polygons:Vector.<Polygon>;
 		private var _distributionIndex:Vector.<Vector.<Vertex>>;
 		private var _distributionIndexLinear:Vector.<Vector.<Vertex>>;
-		
+		private var fudgeBox:BoundingBox = new BoundingBox();
+		private var moireData:BitmapData;
 		
 		public function ParticleMesh() 
 		{
 			_polygons = new Vector.<Polygon>;
-			newPolyFromCorners(	new Vertex( -1, -1),
-								new Vertex(1, -1),
-								new Vertex(-1, 1),
-								new Vertex(1, 1));
+			newPolyFromCorners(	new Vertex( -1, -1, 0),
+								new Vertex(1, -1, 0),
+								new Vertex(-1, 1, 0),
+								new Vertex(1, 1, 0));
+			moireData = new BitmapData(2, 2, false, 0xffffff);
+			moireData.setPixel(0, 0, 0);
+			moireData.setPixel(1, 1, 0);
 		}
 		
 		public function newPolyFromCorners(vertex1:Vertex, vertex2:Vertex, vertex3:Vertex, vertex4:Vertex):void 
@@ -40,13 +44,16 @@ package com.bunnybones.particleMeshToy.geom
 			var g:Graphics = target.graphics;
 			
 			g.clear();
+			g.beginBitmapFill(moireData);
+			g.drawRect(0, 0, target.stage.stageWidth, target.stage.stageHeight);
 			//triangles
 			for each(var polygon:Polygon in _polygons) {
 				for each(var triangle:Triangle in polygon.triangles) {
 					v = triangle.vertices[0];
 					p = viewMatrix.transformPoint(new Point(v.x, v.y));
 					g.moveTo(p.x, p.y);
-					g.beginFill(Math.random() * 0xffffff, .5);
+					g.beginFill(triangle.generateColor(), triangle.generateAlpha());
+					//g.beginFill(Math.random() * 0xffffff, .5);
 					for (var i:int = 1; i < triangle.vertices.length; ++i) {
 						v = triangle.vertices[i];
 						p = viewMatrix.transformPoint(new Point(v.x, v.y));
@@ -71,7 +78,7 @@ package com.bunnybones.particleMeshToy.geom
 			for (var i:int = 0; i < total; i++) 
 			{
 				if (_distributionMap) {
-					_polygons[0].insertVertex(sampleDistributionMap().scale(2, 2).offset(-1,-1));
+					_polygons[0].insertVertex(sampleDistributionMap().add(fudgeBox.randomVertex()).scale(2, 2).offset(-1,-1));
 				} else {
 					_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
 				}
@@ -98,6 +105,13 @@ package com.bunnybones.particleMeshToy.geom
 			trace("retriangulating");
 			for each(var polygon:Polygon in _polygons) {
 				polygon.retriangulateAll();
+			}
+		}
+		
+		public function relax():void 
+		{
+			for each(var polygon:Polygon in _polygons) {
+				polygon.relax();
 			}
 		}
 		
@@ -129,7 +143,8 @@ package com.bunnybones.particleMeshToy.geom
 					}
 				}
 			}
-			trace(_distributionIndexLinear.length);
+			var fudgeVert:Vertex = new Vertex(1 / _distributionMap.width, 1 / _distributionMap.height).scale(.5, .5);
+			fudgeBox.setFromTwoVertices(fudgeVert, fudgeVert.clone().invert());
 		}
 		
 	}

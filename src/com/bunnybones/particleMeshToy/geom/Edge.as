@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.geom 
 {
+	import com.bunnybones.particleMeshToy.Main;
 	import flash.geom.Rectangle;
 	import org.osflash.signals.Signal;
 	/**
@@ -8,6 +9,7 @@ package com.bunnybones.particleMeshToy.geom
 	 */
 	public class Edge 
 	{
+		static public const TENSION:Number = .15;
 		private var _vertex1:Vertex;
 		private var _vertex2:Vertex;
 		private var _boundingBox:BoundingBox;
@@ -22,10 +24,10 @@ package com.bunnybones.particleMeshToy.geom
 			_triangles = new Vector.<Triangle>;
 			_vertex1.registerEdge(this);
 			_vertex2.registerEdge(this);
-			vertex1.updater.add(onVertexUpdated);
-			vertex2.updater.add(onVertexUpdated);
-			vertex1.destroyer.add(onVertexDestroyed);
-			vertex2.destroyer.add(onVertexDestroyed);
+			_vertex1.updater.add(onVertexUpdated);
+			_vertex2.updater.add(onVertexUpdated);
+			_vertex1.destroyer.add(onVertexDestroyed);
+			_vertex2.destroyer.add(onVertexDestroyed);
 			_boundingBox = new BoundingBox();
 			updateBoundingBox();
 		}
@@ -33,7 +35,7 @@ package com.bunnybones.particleMeshToy.geom
 		private function onVertexUpdated(vertex:Vertex):void 
 		{
 			updateBoundingBox();
-			_updater.dispatch();
+			_updater.dispatch(this);
 		}
 		
 		private function onVertexDestroyed(vertex:Vertex):void 
@@ -49,7 +51,11 @@ package com.bunnybones.particleMeshToy.geom
 			_destroyer = null;
 			_updater = null;
 			
+			_vertex1.updater.remove(onVertexUpdated);
+			_vertex1.destroyer.remove(onVertexDestroyed);
 			_vertex1 = null;
+			_vertex2.updater.remove(onVertexUpdated);
+			_vertex2.destroyer.remove(onVertexDestroyed);
 			_vertex2 = null;
 			
 			_boundingBox = null;
@@ -71,6 +77,11 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			triangle.destroyer.add(onTriangleDestroyed);
 			_triangles.push(triangle);
+		}
+		
+		public function relax(newLength:Number):void 
+		{
+			length -= (length - newLength) * TENSION;
 		}
 		
 		private function onTriangleDestroyed(triangle:Triangle):void 
@@ -118,6 +129,21 @@ package com.bunnybones.particleMeshToy.geom
 		public function get length():Number 
 		{
 			return Math.sqrt(Math.pow(vertex1.x - vertex2.x, 2) + Math.pow(vertex1.y - vertex2.y, 2));
+		}
+		
+		public function set length(value:Number):void
+		{
+			if (vertex1.weight == 0 && vertex2.weight == 0) return;
+			var vec:Vertex = vertex1.clone().subtract(vertex2);
+			vec.normalize(length - value);
+			var ratio:Number = vertex1.weight / (vertex1.weight + vertex2.weight);
+			var ratioInv:Number = 1 - ratio;
+			if (ratio != 0) {
+				vertex1.subtract(vec.clone().scale(ratio, ratio));
+			}
+			if (ratioInv != 0) {
+				vertex2.add(vec.clone().scale(ratioInv, ratioInv));
+			}
 		}
 		
 	}
