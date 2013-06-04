@@ -106,23 +106,23 @@ package com.bunnybones.particleMeshToy.geom
 			}
 		}
 		
-		public function serialize(bytes:ByteArray):ByteArray
+		public function serializeParticles(bytes:ByteArray):ByteArray
 		{
 			if (averageEdgeLength >= Settings.SIZE_THRESHOLD) return bytes;
 			//3 floats (x, y, radius)
 			//position
-			getCenter().serialize(bytes);
+			getCenter().serializeParticles(bytes);
 			//radius
 			bytes.writeFloat(averageEdgeLength);
 			return bytes;
 		}
 		
-		private function getCenter():Vertex
+		public function getCenter():Vertex
 		{
 			return _vertices[0].clone().add(_vertices[1]).add(_vertices[2]).scale(MathUtils.A_THIRD, MathUtils.A_THIRD);
 		}
 		
-		private function generateArea():Number
+		public function getSurfaceArea():Number
 		{
 			var a:Vertex = _vertices[0];
 			var b:Vertex = _vertices[1];

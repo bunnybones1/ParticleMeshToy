@@ -42,7 +42,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function draw(target:Sprite, viewMatrix:Matrix):void 
 		{
-			var v:Vertex;
+			var vertex:Vertex;
 			var p:Point;
 			var g:Graphics = target.graphics;
 			
@@ -54,38 +54,61 @@ package com.bunnybones.particleMeshToy.geom
 				case Settings.TYPE_MESH:
 					for each(var polygon:Polygon in _polygons) {
 						for each(var triangle:Triangle in polygon.triangles) {
-							v = triangle.vertices[0];
-							p = viewMatrix.transformPoint(new Point(v.x, v.y));
+							vertex = triangle.vertices[0];
+							p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
 							g.moveTo(p.x, p.y);
 							g.beginFill(triangle.generateColor(), triangle.generateAlpha());
 							for (var i:int = 1; i < triangle.vertices.length; ++i) {
-								v = triangle.vertices[i];
-								p = viewMatrix.transformPoint(new Point(v.x, v.y));
+								vertex = triangle.vertices[i];
+								p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
 								g.lineTo(p.x, p.y);
 							}
 							g.endFill();
 						}
 					}
 					break;
-				case Settings.TYPE_PARTICLES_FROM_VERTICES:
-					//vertices
-					var verticesAlreadyRendered:Vector.<Vertex> = new Vector.<Vertex>;
-					for each(var polygon:Polygon in _polygons) {
-						for each(var triangle:Triangle in polygon.triangles) {
-							v = triangle.vertices[0];
-							var vl:Number = v.getAverageEdgeLength() * .5 * Settings.particleScale;
-							if(Settings.filterByParticleSizeLow <= vl && vl <= Settings.filterByParticleSizeHigh) {
-								if (verticesAlreadyRendered.indexOf(v) == -1) {
-									verticesAlreadyRendered.push(v);
-									g.beginFill(0x0000ff, .5);
-									p = viewMatrix.transformPoint(new Point(v.x, v.y));
-									g.drawCircle(p.x, p.y, viewMatrix.a * vl);
-									g.endFill();
+				default:
+					switch(Settings.meshType) {
+						case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+						case Settings.TYPE_PARTICLES_FROM_VERTICES:
+							//vertices from vertices
+							var verticesAlreadyRendered:Vector.<Vertex> = new Vector.<Vertex>;
+							for each(var polygon:Polygon in _polygons) {
+								for each(var triangle:Triangle in polygon.triangles) {
+									for each(vertex in triangle.vertices) {
+										var vertexSize:Number = vertex.getAverageEdgeLength() * .5 * Settings.particleScale;
+										if(Settings.filterByParticleSizeLow <= vertexSize && vertexSize <= Settings.filterByParticleSizeHigh) {
+											if (verticesAlreadyRendered.indexOf(vertex) == -1) {
+												verticesAlreadyRendered.push(vertex);
+												g.beginFill(0x0000ff, .5);
+												p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
+												g.drawCircle(p.x, p.y, viewMatrix.a * vertexSize);
+												g.endFill();
+											}
+										}
+									}
 								}
 							}
-						}
+							break;
 					}
-					break;
+					switch(Settings.meshType) {
+						case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+						case Settings.TYPE_PARTICLES_FROM_FACES:
+							//vertices from traingles
+							for each(var polygon:Polygon in _polygons) {
+								for each(var triangle:Triangle in polygon.triangles) {
+									var faceCenter:Vertex = triangle.getCenter();
+									var faceSize:Number = Math.sqrt(triangle.getSurfaceArea() / Math.PI) * Settings.particleScale;
+									if(Settings.filterByParticleSizeLow <= faceSize && faceSize <= Settings.filterByParticleSizeHigh) {
+										g.beginFill(0x0000ff, .5);
+										p = viewMatrix.transformPoint(new Point(faceCenter.x, faceCenter.y));
+										g.drawCircle(p.x, p.y, viewMatrix.a * faceSize);
+										g.endFill();
+									}
+								}
+							}
+							break;
+					}
 			}
 		}
 		
@@ -133,21 +156,58 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function serialize(bytes:ByteArray):ByteArray
 		{
-			var header:String = "ParticleMesh. Read uint for particleCount. Then read uint for size of data block containing particle stream (float x, float y, float radius). Then read particle data stream until it's over.";
+			var header:String;
+			switch(Settings.meshType) {
+				case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+				case Settings.TYPE_PARTICLES_FROM_VERTICES:
+				case Settings.TYPE_PARTICLES_FROM_FACES:
+					header = "Particles.\n" +
+					"Read uint for particleCount.\n" +
+					"Then read uint for size of data block containing particle stream (float x, float y, float radius).\n" +
+					"Then read particle data stream.";
+					break;
+				case Settings.TYPE_MESH:
+					header = "Mesh.\n" +
+					"Read uint for vertexCount.\n" +
+					"Then read uint for size of data block containing vertex stream (float x, float y).\n" +
+					"Then read vertex data stream.\n" +
+					"Then read uint for size of data block containing index stream (uint i).\n" +
+					"Then read index data stream."
+					break;
+			}
 			var headerBytes:ByteArray = new ByteArray();
-			trace(headerBytes.endian);// = Endian.
-			headerBytes.endian = Endian.LITTLE_ENDIAN;
+			headerBytes.endian = Settings.endian;
 			headerBytes.writeUTF(header);
 			bytes.writeBytes(headerBytes);
 			var dataStreamBytes:ByteArray = new ByteArray();
-			dataStreamBytes.endian = Endian.LITTLE_ENDIAN;
-			var totalParticles:uint = 0;
-			for each(var polygon:Polygon in _polygons) {
-				polygon.serialize(dataStreamBytes);
+			dataStreamBytes.endian = Settings.endian;
+			switch(Settings.meshType) {
+				case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+				case Settings.TYPE_PARTICLES_FROM_VERTICES:
+				case Settings.TYPE_PARTICLES_FROM_FACES:
+					for each(var polygon:Polygon in _polygons) {
+						polygon.serializeParticles(dataStreamBytes);
+					}
+					var totalParticles:uint = dataStreamBytes.length / 12;
+					trace(totalParticles);
+					bytes.writeUnsignedInt(totalParticles);
+					break;
+				case Settings.TYPE_MESH:
+					var vertices:Vector.<Vertex> = new Vector.<Vertex>;
+					//TODO serialize each vertex
+					var totalVertices:uint = vertices.length;
+					var indices:Vector.<uint> = new Vector.<uint>;
+					for each(var polygon:Polygon in _polygons) {
+						for each(var vertex:Vertex in polygon.vertices) {
+							if (vertices.indexOf(vertex) == -1) {
+								vertices.push(vertex);
+							}
+						}
+					}
+					//serialize the indices
+					var totalIndices:uint = 9999;
+					break;
 			}
-			totalParticles = dataStreamBytes.length / 12;
-			trace(totalParticles);
-			bytes.writeUnsignedInt(totalParticles);
 			bytes.writeUnsignedInt(dataStreamBytes.length);
 			trace(dataStreamBytes.length);
 			bytes.writeBytes(dataStreamBytes);

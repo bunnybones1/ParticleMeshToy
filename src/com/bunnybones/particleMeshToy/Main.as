@@ -52,9 +52,9 @@ package com.bunnybones.particleMeshToy
 			particleMesh.addRandomVertices(120 * 80 * .1);
 			//particleMesh.addRandomVertices(3);
 			
-			drawMesh();
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			ready = true;
+			drawMesh();
 		}
 		
 		private function onControlsSelect(e:Event):void 

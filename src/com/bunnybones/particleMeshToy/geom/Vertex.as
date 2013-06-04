@@ -158,7 +158,7 @@ package com.bunnybones.particleMeshToy.geom
 			y *= value / magnitude;
 		}
 		
-		public function serialize(bytes:ByteArray):ByteArray
+		public function serializeParticles(bytes:ByteArray):ByteArray
 		{
 			bytes.writeFloat(_x);
 			bytes.writeFloat(_y);

@@ -93,10 +93,10 @@ package com.bunnybones.particleMeshToy.geom
 			}
 		}
 		
-		public function serialize(bytes:ByteArray):ByteArray
+		public function serializeParticles(bytes:ByteArray):ByteArray
 		{
 			for each(var triangle:Triangle in _triangles) {
-				triangle.serialize(bytes);
+				triangle.serializeParticles(bytes);
 			}
 			return bytes;
 		}
