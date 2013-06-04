@@ -122,10 +122,10 @@ package com.bunnybones.particleMeshToy.geom
 			}
 		}
 		
-		private function retriangulate(edge:Edge):void 
+		private function retriangulate(edge:Edge):Boolean 
 		{
-			if (!edge) return;
-			if (!edge.hasTwoTriangles) return;
+			if (!edge) return false;
+			if (!edge.hasTwoTriangles) return false;
 			var newEdge:Edge = new Edge(edge.triangles[0].vertexOppositeEdge(edge), edge.triangles[1].vertexOppositeEdge(edge));
 			if (newEdge.length < edge.length) {
 				//check for concave polygons
@@ -138,10 +138,11 @@ package com.bunnybones.particleMeshToy.geom
 					triangle1.destroyer.add(onTriangleDestroyed);
 					triangle2.destroyer.add(onTriangleDestroyed);
 					_triangles.push(triangle1, triangle2);
-				} else {
-					//trace("New edge was not flanked, so not retriangulated.");
+					return true;
 				}
 			}
+			newEdge.destroy();
+			return false;
 		}
 		
 		public function get triangles():Vector.<Triangle> 

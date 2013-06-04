@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.geom 
 {
+	import com.bunnybones.particleMeshToy.Settings;
 	import flash.display.BitmapData;
 	import flash.display.Graphics;
 	import flash.display.Sprite;
@@ -49,28 +50,42 @@ package com.bunnybones.particleMeshToy.geom
 			g.beginBitmapFill(moireData);
 			g.drawRect(0, 0, target.stage.stageWidth, target.stage.stageHeight);
 			//triangles
-			for each(var polygon:Polygon in _polygons) {
-				for each(var triangle:Triangle in polygon.triangles) {
-					v = triangle.vertices[0];
-					p = viewMatrix.transformPoint(new Point(v.x, v.y));
-					g.moveTo(p.x, p.y);
-					g.beginFill(triangle.generateColor(), triangle.generateAlpha());
-					for (var i:int = 1; i < triangle.vertices.length; ++i) {
-						v = triangle.vertices[i];
-						p = viewMatrix.transformPoint(new Point(v.x, v.y));
-						g.lineTo(p.x, p.y);
+			switch(Settings.meshType) {
+				case Settings.TYPE_MESH:
+					for each(var polygon:Polygon in _polygons) {
+						for each(var triangle:Triangle in polygon.triangles) {
+							v = triangle.vertices[0];
+							p = viewMatrix.transformPoint(new Point(v.x, v.y));
+							g.moveTo(p.x, p.y);
+							g.beginFill(triangle.generateColor(), triangle.generateAlpha());
+							for (var i:int = 1; i < triangle.vertices.length; ++i) {
+								v = triangle.vertices[i];
+								p = viewMatrix.transformPoint(new Point(v.x, v.y));
+								g.lineTo(p.x, p.y);
+							}
+							g.endFill();
+						}
 					}
-					g.endFill();
-				}
-			return;
-				//vertices
-				g.lineStyle(3, 0x0000ff, 1);
-				for each(v in polygon.vertices) {
-					p = viewMatrix.transformPoint(new Point(v.x, v.y));
-					g.moveTo(p.x, p.y);
-					g.lineTo(p.x + 1, p.y);
-				}
-				g.lineStyle(0, 0, 0);
+					break;
+				case Settings.TYPE_PARTICLES_FROM_VERTICES:
+					//vertices
+					var verticesAlreadyRendered:Vector.<Vertex> = new Vector.<Vertex>;
+					for each(var polygon:Polygon in _polygons) {
+						for each(var triangle:Triangle in polygon.triangles) {
+							v = triangle.vertices[0];
+							var vl:Number = v.getAverageEdgeLength() * .5 * Settings.particleScale;
+							if(Settings.filterByParticleSizeLow <= vl && vl <= Settings.filterByParticleSizeHigh) {
+								if (verticesAlreadyRendered.indexOf(v) == -1) {
+									verticesAlreadyRendered.push(v);
+									g.beginFill(0x0000ff, .5);
+									p = viewMatrix.transformPoint(new Point(v.x, v.y));
+									g.drawCircle(p.x, p.y, viewMatrix.a * vl);
+									g.endFill();
+								}
+							}
+						}
+					}
+					break;
 			}
 		}
 		

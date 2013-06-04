@@ -4,6 +4,7 @@ package com.bunnybones.particleMeshToy.ui
 	import com.bit101.components.LabelledSlider;
 	import com.bit101.components.RadioButton;
 	import com.bit101.components.Slider;
+	import com.bunnybones.particleMeshToy.Settings;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
 	import flash.events.Event;
@@ -41,13 +42,38 @@ package com.bunnybones.particleMeshToy.ui
 			addChild(tr);
 			addChild(bl);
 			addChild(br);
-			new RadioButton(br, 0, 0, "particles from faces", true, onTypeSelect);
-			new RadioButton(br, 0, 0, "particles from vertices", true, onTypeSelect);
-			new RadioButton(br, 0, 0, "mesh", true, onTypeSelect);
+			new RadioButton(br, 0, 0, "particles from faces and vertices", true, onTypeSelectParticlesFromFacesAndVertices);
+			new RadioButton(br, 0, 0, "particles from faces", true, onTypeSelectParticlesFromFaces);
+			new RadioButton(br, 0, 0, "particles from vertices", true, onTypeSelectParticlesFromVertices);
+			new RadioButton(br, 0, 0, "mesh", true, onTypeSelectMesh);
 			new LabelledSlider(bl, 0, 0, onParticleScaleChange, "Particle Scale");
 			var rs:LabelledRangeSlider = new LabelledRangeSlider(bl, 0, 0, onFilterByParticleSizeChange, "Filter by Particle Size");
-			rs.lowValue = 0;
-			rs.highValue = 100;
+			rs.lowValue = Settings.filterByParticleSizeLow;
+			rs.highValue = Settings.filterByParticleSizeHigh;
+		}
+		
+		private function onTypeSelectMesh(e:Event):void 
+		{
+			Settings.meshType = Settings.TYPE_MESH;
+			dispatchEvent(new Event(Event.SELECT));
+		}
+		
+		private function onTypeSelectParticlesFromVertices(e:Event):void 
+		{
+			Settings.meshType = Settings.TYPE_PARTICLES_FROM_VERTICES;
+			dispatchEvent(new Event(Event.SELECT));
+		}
+		
+		private function onTypeSelectParticlesFromFaces(e:Event):void 
+		{
+			Settings.meshType = Settings.TYPE_PARTICLES_FROM_FACES;
+			dispatchEvent(new Event(Event.SELECT));
+		}
+		
+		private function onTypeSelectParticlesFromFacesAndVertices(e:Event):void 
+		{
+			Settings.meshType = Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES;
+			dispatchEvent(new Event(Event.SELECT));
 		}
 		
 		private function onStageResize(e:Event):void 
@@ -60,22 +86,17 @@ package com.bunnybones.particleMeshToy.ui
 		
 		private function onFilterByParticleSizeChange(e:Event):void 
 		{
-			trace(e);
-			trace("filter by particle size");
+			var slider:LabelledRangeSlider = e.target as LabelledRangeSlider;
+			Settings.filterByParticleSizeLow = slider.lowValue * .01;
+			Settings.filterByParticleSizeHigh = slider.highValue * .01;
+			dispatchEvent(new Event(Event.CHANGE));
 		}
 		
 		private function onParticleScaleChange(e:Event):void 
 		{
-			trace(e);
-			trace("particle size");
+			Settings.particleScale = (e.target as LabelledSlider).value * .05;
+			dispatchEvent(new Event(Event.CHANGE));
 		}
-		
-		private function onTypeSelect(e:Event):void 
-		{
-			trace(e);
-			trace("selected type");
-		}
-		
 	}
 
 }

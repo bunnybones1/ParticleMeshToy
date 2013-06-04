@@ -33,12 +33,6 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function set x(value:Number):void 
 		{
-			if (isNaN(value)) {
-				trace("!");
-			}
-			if (value < -2000 || value > 2000) {
-				trace("?");
-			}
 			_x = value;
 			_updater.dispatch(this);
 		}
@@ -50,12 +44,6 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function set y(value:Number):void 
 		{
-			if (isNaN(value)) {
-				trace("!");
-			}
-			if (value < -2000 || value > 12000) {
-				trace("?");
-			}
 			_y = value;
 			_updater.dispatch(this);
 		}
@@ -97,12 +85,6 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function setXY(x:Number, y:Number):void
 		{
-			if (isNaN(x)) {
-				trace("!");
-			}
-			if (isNaN(y)) {
-				trace("!");
-			}
 			_x = x;
 			_y = y;
 			_updater.dispatch(this);
@@ -120,7 +102,13 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function registerEdge(edge:Edge):void 
 		{
+			edge.destroyer.add(onEdgeDestroyed);
 			_edges.push(edge);
+		}
+		
+		private function onEdgeDestroyed(edge:Edge):void 
+		{
+			_edges.splice(_edges.indexOf(edge), 1);
 		}
 		
 		public function clone():Vertex 
@@ -175,6 +163,22 @@ package com.bunnybones.particleMeshToy.geom
 			bytes.writeFloat(_x);
 			bytes.writeFloat(_y);
 			return bytes;
+		}
+		
+		public function getAverageEdgeLength():Number
+		{
+			var length:Number = 0;
+			for (var i:int = _edges.length - 1; i >= 0;--i) {
+				var e:Edge = _edges[i];
+				if(e.vertex1 != null) {
+					length += e.length;
+				} else {
+					//hotfix: for some reason some edges are not being destroyed properly
+					trace("hotfix");
+					_edges.splice(i, 1);
+				}
+			}
+			return length/_edges.length;
 		}
 	}
 

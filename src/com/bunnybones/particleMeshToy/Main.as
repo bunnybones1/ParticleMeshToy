@@ -17,13 +17,14 @@ package com.bunnybones.particleMeshToy
 	 */
 	public class Main extends Sprite 
 	{
-		[Embed(source = "../../../../bin/left.png")]
+		[Embed(source = "../../../../assets/test.png")]
 		private static const distributionImage:Class;
 		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
 		private var iterations:int = 0;
 		private var controls:Controls;
 		private var canvas:Sprite;
+		private var ready:Boolean;
 		public function Main():void 
 		{
 			if (stage) init();
@@ -40,6 +41,8 @@ package com.bunnybones.particleMeshToy
 			addChild(canvas);
 			
 			controls = new Controls();
+			controls.addEventListener(Event.CHANGE, onControlsChange);
+			controls.addEventListener(Event.SELECT, onControlsSelect);
 			addChild(controls);
 			
 			var distributionMap:Bitmap = new distributionImage();
@@ -51,6 +54,17 @@ package com.bunnybones.particleMeshToy
 			
 			drawMesh();
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+			ready = true;
+		}
+		
+		private function onControlsSelect(e:Event):void 
+		{
+			if(ready) drawMesh();
+		}
+		
+		private function onControlsChange(e:Event):void 
+		{
+			if(ready) drawMesh();
 		}
 		
 		private function drawMesh():void 
