@@ -42,7 +42,7 @@ package com.bunnybones.particleMeshToy
 			var fileStream:FileStream = new FileStream();
 			fileStream.openAsync(file, FileMode.WRITE);
 			var bytes:ByteArray = new ByteArray();
-			bytes.endian = Endian.BIG_ENDIAN;
+			bytes.endian = Endian.LITTLE_ENDIAN;
 			fileStream.writeBytes(particleMesh.serialize(bytes));
 			fileStream.close();
 		}

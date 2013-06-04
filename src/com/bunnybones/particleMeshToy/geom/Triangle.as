@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.geom 
 {
+	import com.bunnybones.particleMeshToy.Settings;
 	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
 	import org.osflash.signals.Signal;
@@ -93,19 +94,21 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function generateAlpha():Number 
 		{
-			return 1;
+			if (averageEdgeLength < Settings.SIZE_THRESHOLD) return 1;
+			else return .5;
 			//return 1-Math.pow(1-Math.min(1, .0001/generateArea()), 6);
 		}
 		
 		public function relax():void 
 		{
 			for each(var edge:Edge in _edges) {
-				edge.relax(averageEdgeLength);
+				edge.relax(averageEdgeLength * .75);
 			}
 		}
 		
 		public function serialize(bytes:ByteArray):ByteArray
 		{
+			if (averageEdgeLength >= Settings.SIZE_THRESHOLD) return bytes;
 			//3 floats (x, y, radius)
 			//position
 			getCenter().serialize(bytes);

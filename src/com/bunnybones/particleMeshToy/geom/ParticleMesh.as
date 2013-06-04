@@ -7,6 +7,7 @@ package com.bunnybones.particleMeshToy.geom
 	import com.bunnybones.particleMeshToy.Main;
 	import flash.geom.Point;
 	import flash.utils.ByteArray;
+	import flash.utils.Endian;
 	/**
 	 * ...
 	 * @author Tomasz Dysinski
@@ -54,7 +55,6 @@ package com.bunnybones.particleMeshToy.geom
 					p = viewMatrix.transformPoint(new Point(v.x, v.y));
 					g.moveTo(p.x, p.y);
 					g.beginFill(triangle.generateColor(), triangle.generateAlpha());
-					//g.beginFill(Math.random() * 0xffffff, .5);
 					for (var i:int = 1; i < triangle.vertices.length; ++i) {
 						v = triangle.vertices[i];
 						p = viewMatrix.transformPoint(new Point(v.x, v.y));
@@ -118,13 +118,25 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function serialize(bytes:ByteArray):ByteArray
 		{
-			var header:String = "ParticleMesh. Read uint for size of data block containing particle stream (float x, float y, float radius).";
+			var header:String = "ParticleMesh. Read uint for particleCount. Then read uint for size of data block containing particle stream (float x, float y, float radius). Then read particle data stream until it's over.";
 			var headerBytes:ByteArray = new ByteArray();
+			trace(headerBytes.endian);// = Endian.
+			headerBytes.endian = Endian.LITTLE_ENDIAN;
 			headerBytes.writeUTF(header);
 			bytes.writeBytes(headerBytes);
+			var dataStreamBytes:ByteArray = new ByteArray();
+			dataStreamBytes.endian = Endian.LITTLE_ENDIAN;
+			var totalParticles:uint = 0;
 			for each(var polygon:Polygon in _polygons) {
-				polygon.serialize(bytes);
+				polygon.serialize(dataStreamBytes);
 			}
+			totalParticles = dataStreamBytes.length / 12;
+			trace(totalParticles);
+			bytes.writeUnsignedInt(totalParticles);
+			bytes.writeUnsignedInt(dataStreamBytes.length);
+			trace(dataStreamBytes.length);
+			bytes.writeBytes(dataStreamBytes);
+			
 			return bytes;
 		}
 		

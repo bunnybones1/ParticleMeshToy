@@ -1,3 +1,6 @@
 [submodule "lib/as3-signals"]
 	path = lib/as3-signals
 	url = git://github.com/robertpenner/as3-signals.git
+[submodule "lib/minimalcomps"]
+	path = lib/minimalcomps
+	url = https://github.com/bunnybones1/minimalcomps.git

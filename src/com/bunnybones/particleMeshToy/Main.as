@@ -1,8 +1,11 @@
 package com.bunnybones.particleMeshToy
 {
 	import com.bunnybones.particleMeshToy.geom.ParticleMesh;
+	import com.bunnybones.particleMeshToy.ui.Controls;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
+	import flash.display.StageAlign;
+	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
 	import flash.geom.Matrix;
@@ -14,26 +17,61 @@ package com.bunnybones.particleMeshToy
 	 */
 	public class Main extends Sprite 
 	{
-		[Embed(source = "../../../../bin/distribution.png")]
+		[Embed(source = "../../../../bin/left.png")]
 		private static const distributionImage:Class;
 		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
 		private var iterations:int = 0;
+		private var controls:Controls;
+		private var canvas:Sprite;
 		public function Main():void 
 		{
-			viewMatrix = new Matrix();
-			viewMatrix.translate(1, 1);
-			viewMatrix.scale(400, 400);
-			viewMatrix.translate(50, 50);
+			if (stage) init();
+			else addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+		}
+		
+		private function init():void
+		{
+			stage.align = StageAlign.TOP_LEFT;
+			stage.scaleMode = StageScaleMode.NO_SCALE;
+			stage.addEventListener(Event.RESIZE, onResize);
+			
+			canvas = new Sprite();
+			addChild(canvas);
+			
+			controls = new Controls();
+			addChild(controls);
 			
 			var distributionMap:Bitmap = new distributionImage();
 			
 			particleMesh = new ParticleMesh();
 			particleMesh.distributionMap = distributionMap.bitmapData;
-			particleMesh.addRandomVertices(120 * 80 * .05);
-			particleMesh.draw(this, viewMatrix);
+			particleMesh.addRandomVertices(120 * 80 * .1);
+			//particleMesh.addRandomVertices(3);
 			
+			drawMesh();
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
+		}
+		
+		private function drawMesh():void 
+		{
+			viewMatrix = new Matrix();
+			var minViewLength:Number = Math.min(stage.stageWidth , stage.stageHeight);
+			viewMatrix.scale(minViewLength * .5, minViewLength * .5);
+			viewMatrix.translate(stage.stageWidth * .5, stage.stageHeight * .5);
+			//viewMatrix.translate(50, 50);
+			particleMesh.draw(canvas, viewMatrix);
+		}
+		
+		private function onResize(e:Event):void 
+		{
+			drawMesh();
+		}
+		
+		private function onAddedToStage(e:Event):void 
+		{
+			removeEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+			init();
 		}
 		
 		private function onKeyDown(e:KeyboardEvent):void 
@@ -63,7 +101,7 @@ package com.bunnybones.particleMeshToy
 				iterations--;
 				particleMesh.retriangulate();
 				particleMesh.relax();
-				particleMesh.draw(this, viewMatrix);
+				particleMesh.draw(canvas, viewMatrix);
 			} else if (iterations == 0) {
 				iterations--;
 				stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
