@@ -54,16 +54,19 @@ package com.bunnybones.particleMeshToy.geom
 				case Settings.TYPE_MESH:
 					for each(var polygon:Polygon in _polygons) {
 						for each(var triangle:Triangle in polygon.triangles) {
-							vertex = triangle.vertices[0];
-							p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
-							g.moveTo(p.x, p.y);
-							g.beginFill(triangle.generateColor(), triangle.generateAlpha());
-							for (var i:int = 1; i < triangle.vertices.length; ++i) {
-								vertex = triangle.vertices[i];
+							var surfaceArea:Number = triangle.getAverageEdgeLength();
+							if (Settings.filterByParticleSizeLow <= surfaceArea && surfaceArea <= Settings.filterByParticleSizeHigh) {
+								vertex = triangle.vertices[0];
 								p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
-								g.lineTo(p.x, p.y);
+								g.moveTo(p.x, p.y);
+								g.beginFill(triangle.generateColor(), .5);
+								for (var i:int = 1; i < triangle.vertices.length; ++i) {
+									vertex = triangle.vertices[i];
+									p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
+									g.lineTo(p.x, p.y);
+								}
+								g.endFill();
 							}
-							g.endFill();
 						}
 					}
 					break;
@@ -156,6 +159,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function serialize(bytes:ByteArray):ByteArray
 		{
+			//header
 			var header:String;
 			switch(Settings.meshType) {
 				case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
@@ -163,15 +167,17 @@ package com.bunnybones.particleMeshToy.geom
 				case Settings.TYPE_PARTICLES_FROM_FACES:
 					header = "Particles.\n" +
 					"Read uint for particleCount.\n" +
-					"Then read uint for size of data block containing particle stream (float x, float y, float radius).\n" +
+					"Then read uint for size of data block containing particle stream: particleCount * (float x, float y, float radius).\n" +
 					"Then read particle data stream.";
 					break;
 				case Settings.TYPE_MESH:
 					header = "Mesh.\n" +
 					"Read uint for vertexCount.\n" +
-					"Then read uint for size of data block containing vertex stream (float x, float y).\n" +
+					"Then read uint for size of data block containing vertex stream: vertexCount * (float x, float y).\n" +
 					"Then read vertex data stream.\n" +
-					"Then read uint for size of data block containing index stream (uint i).\n" +
+					
+					"Then read uint for indexCount.\n" +
+					"Then read uint for size of data block containing index stream: indexCount *(uint i).\n" +
 					"Then read index data stream."
 					break;
 			}
@@ -179,39 +185,112 @@ package com.bunnybones.particleMeshToy.geom
 			headerBytes.endian = Settings.endian;
 			headerBytes.writeUTF(header);
 			bytes.writeBytes(headerBytes);
-			var dataStreamBytes:ByteArray = new ByteArray();
-			dataStreamBytes.endian = Settings.endian;
+			
+			//data
+			var dataBytes:ByteArray = new ByteArray();
+			dataBytes.endian = Settings.endian;
 			switch(Settings.meshType) {
-				case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
-				case Settings.TYPE_PARTICLES_FROM_VERTICES:
-				case Settings.TYPE_PARTICLES_FROM_FACES:
-					for each(var polygon:Polygon in _polygons) {
-						polygon.serializeParticles(dataStreamBytes);
-					}
-					var totalParticles:uint = dataStreamBytes.length / 12;
-					trace(totalParticles);
-					bytes.writeUnsignedInt(totalParticles);
-					break;
 				case Settings.TYPE_MESH:
+					//organize the vertices and indices
+					var culledTriangles:Vector.<Triangle> = new Vector.<Triangle>();
 					var vertices:Vector.<Vertex> = new Vector.<Vertex>;
-					//TODO serialize each vertex
-					var totalVertices:uint = vertices.length;
 					var indices:Vector.<uint> = new Vector.<uint>;
 					for each(var polygon:Polygon in _polygons) {
-						for each(var vertex:Vertex in polygon.vertices) {
+						for each(var triangle:Triangle in polygon.triangles) {
+							var surfaceArea:Number = triangle.getAverageEdgeLength();
+							if (Settings.filterByParticleSizeLow <= surfaceArea && surfaceArea <= Settings.filterByParticleSizeHigh) {
+								culledTriangles.push(triangle);
+							}
+						}
+					}
+					for each(var triangle:Triangle in culledTriangles) {
+						for each(var vertex:Vertex in triangle.vertices) {
 							if (vertices.indexOf(vertex) == -1) {
 								vertices.push(vertex);
 							}
 						}
 					}
-					//serialize the indices
-					var totalIndices:uint = 9999;
+					
+					for each(var triangle:Triangle in culledTriangles) {
+						for each(var vertex:Vertex in triangle.vertices) {
+							indices.push(uint(vertices.indexOf(vertex)));
+						}
+					}
+					
+					var totalVertices:uint = vertices.length;
+					var totalIndices:uint = indices.length;
+					var vertexBytes:ByteArray = new ByteArray();
+					vertexBytes.endian = Settings.endian;
+					for (var i:int = 0; i < vertices.length; i++) {
+						vertexBytes.writeFloat(vertices[i].x);
+						vertexBytes.writeFloat(vertices[i].y);
+					}
+					var indexBytes:ByteArray = new ByteArray();
+					indexBytes.endian = Settings.endian;
+					for (var i:int = 0; i < vertices.length; i++) {
+						indexBytes.writeUnsignedInt(indices[i]);
+					}
+					dataBytes.writeUnsignedInt(totalVertices);
+					dataBytes.writeUnsignedInt(vertexBytes.length);
+					dataBytes.writeBytes(vertexBytes);
+					
+					dataBytes.writeUnsignedInt(totalIndices);
+					dataBytes.writeUnsignedInt(indexBytes.length);
+					dataBytes.writeBytes(indexBytes);
+					break;
+				default:
+					var particleDataBytes:ByteArray = new ByteArray();
+					particleDataBytes.endian = Settings.endian;
+					switch(Settings.meshType) {
+						case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+						case Settings.TYPE_PARTICLES_FROM_VERTICES:
+							//vertices from vertices
+							var verticesAlreadyCounted:Vector.<Vertex> = new Vector.<Vertex>;
+							for each(var polygon:Polygon in _polygons) {
+								for each(var triangle:Triangle in polygon.triangles) {
+									for each(vertex in triangle.vertices) {
+										var vertexSize:Number = vertex.getAverageEdgeLength() * .5 * Settings.particleScale;
+										if(Settings.filterByParticleSizeLow <= vertexSize && vertexSize <= Settings.filterByParticleSizeHigh) {
+											if (verticesAlreadyCounted.indexOf(vertex) == -1) {
+												verticesAlreadyCounted.push(vertex);
+												particleDataBytes.writeFloat(vertex.x);
+												particleDataBytes.writeFloat(vertex.y);
+												particleDataBytes.writeFloat(vertexSize);
+											}
+										}
+									}
+								}
+							}
+							break;
+					}
+					switch(Settings.meshType) {
+						case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
+						case Settings.TYPE_PARTICLES_FROM_FACES:
+							//vertices from traingles
+							for each(var polygon:Polygon in _polygons) {
+								for each(var triangle:Triangle in polygon.triangles) {
+									var faceCenter:Vertex = triangle.getCenter();
+									var faceSize:Number = Math.sqrt(triangle.getSurfaceArea() / Math.PI) * Settings.particleScale;
+									if (Settings.filterByParticleSizeLow <= faceSize && faceSize <= Settings.filterByParticleSizeHigh) {
+										particleDataBytes.writeFloat(faceCenter.x);
+										particleDataBytes.writeFloat(faceCenter.y);
+										particleDataBytes.writeFloat(faceSize);
+									}
+								}
+							}
+							break;
+					}
+					
+					for each(var polygon:Polygon in _polygons) {
+						polygon.serializeParticles(particleDataBytes);
+					}
+					var totalParticles:uint = particleDataBytes.length / 12;
+					dataBytes.writeUnsignedInt(totalParticles);
+					dataBytes.writeUnsignedInt(particleDataBytes.length);
+					dataBytes.writeBytes(particleDataBytes);
 					break;
 			}
-			bytes.writeUnsignedInt(dataStreamBytes.length);
-			trace(dataStreamBytes.length);
-			bytes.writeBytes(dataStreamBytes);
-			
+			bytes.writeBytes(dataBytes);
 			return bytes;
 		}
 		

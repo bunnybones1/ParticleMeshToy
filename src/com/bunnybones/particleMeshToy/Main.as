@@ -8,8 +8,10 @@ package com.bunnybones.particleMeshToy
 	import flash.display.StageScaleMode;
 	import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.filesystem.File;
 	import flash.geom.Matrix;
 	import flash.ui.Keyboard;
+	import flash.utils.ByteArray;
 	
 	/**
 	 * ...
@@ -17,7 +19,7 @@ package com.bunnybones.particleMeshToy
 	 */
 	public class Main extends Sprite 
 	{
-		[Embed(source = "../../../../assets/test.png")]
+		[Embed(source = "../../../../bin/left.png")]
 		private static const distributionImage:Class;
 		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
@@ -105,7 +107,19 @@ package com.bunnybones.particleMeshToy
 		
 		protected function save():void 
 		{
-			trace("saving");
+			trace("saving PlanarParticleMesh (.ppm)");
+		}
+		
+		protected function saveCPPHeader(ppmFile:File, ppmBytes:ByteArray):void 
+		{
+			trace("saving cpp header (.h)");
+		}
+		
+		protected function generateCPPHeaderBytes(ppmBytes:ByteArray):ByteArray 
+		{
+			ppmBytes.position = 0;
+			var headerLength:uint = ppmBytes.readShort();
+			return ppmBytes;
 		}
 		
 		private function onEnterFrame(e:Event):void 

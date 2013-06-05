@@ -94,13 +94,14 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function generateAlpha():Number 
 		{
-			if (averageEdgeLength < Settings.SIZE_THRESHOLD) return 1;
+			if (getAverageEdgeLength() < Settings.SIZE_THRESHOLD) return 1;
 			else return .5;
 			//return 1-Math.pow(1-Math.min(1, .0001/generateArea()), 6);
 		}
 		
 		public function relax():void 
 		{
+			var averageEdgeLength:Number = getAverageEdgeLength();
 			for each(var edge:Edge in _edges) {
 				edge.relax(averageEdgeLength * .75);
 			}
@@ -108,6 +109,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function serializeParticles(bytes:ByteArray):ByteArray
 		{
+			var averageEdgeLength:Number = getAverageEdgeLength();
 			if (averageEdgeLength >= Settings.SIZE_THRESHOLD) return bytes;
 			//3 floats (x, y, radius)
 			//position
@@ -155,7 +157,7 @@ package com.bunnybones.particleMeshToy.geom
 			return _updater;
 		}
 		
-		public function get averageEdgeLength():Number 
+		public function getAverageEdgeLength():Number 
 		{
 			return (_edges[0].length + _edges[1].length + _edges[2].length) / 3;
 		}
