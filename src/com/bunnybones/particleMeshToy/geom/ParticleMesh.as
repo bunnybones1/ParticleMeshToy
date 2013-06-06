@@ -227,7 +227,7 @@ package com.bunnybones.particleMeshToy.geom
 					}
 					var indexBytes:ByteArray = new ByteArray();
 					indexBytes.endian = Settings.endian;
-					for (var i:int = 0; i < vertices.length; i++) {
+					for (var i:int = 0; i < indices.length; i++) {
 						indexBytes.writeUnsignedInt(indices[i]);
 					}
 					dataBytes.writeUnsignedInt(totalVertices);

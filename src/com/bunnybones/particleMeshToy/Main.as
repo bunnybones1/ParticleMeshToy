@@ -19,8 +19,11 @@ package com.bunnybones.particleMeshToy
 	 */
 	public class Main extends Sprite 
 	{
-		[Embed(source = "../../../../bin/left.png")]
+		
+		[Embed(source = "../../../../assets/test.png")]
 		private static const distributionImage:Class;
+		[Embed(source="../../../../assets/meshTemplate.h", mimeType="application/octet-stream")]
+		private static const meshTemplate:Class;
 		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
 		private var iterations:int = 0;
@@ -51,8 +54,8 @@ package com.bunnybones.particleMeshToy
 			
 			particleMesh = new ParticleMesh();
 			particleMesh.distributionMap = distributionMap.bitmapData;
-			particleMesh.addRandomVertices(120 * 80 * .1);
-			//particleMesh.addRandomVertices(3);
+			//particleMesh.addRandomVertices(120 * 80 * .1);
+			particleMesh.addRandomVertices(10);
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			ready = true;
@@ -115,11 +118,53 @@ package com.bunnybones.particleMeshToy
 			trace("saving cpp header (.h)");
 		}
 		
-		protected function generateCPPHeaderBytes(ppmBytes:ByteArray):ByteArray 
+		protected function generateCPPHeaderBytes(ppmBytes:ByteArray, baseName:String):ByteArray 
 		{
+			var template:String;
 			ppmBytes.position = 0;
-			var headerLength:uint = ppmBytes.readShort();
-			return ppmBytes;
+			var header:String = ppmBytes.readUTF();
+			trace(header);
+			var type:String = header.substr(0, header.indexOf("."));
+			switch(type) {
+				case "Mesh":
+					var vertexCount:uint = ppmBytes.readUnsignedInt();
+					var vertexDataLength:uint = ppmBytes.readUnsignedInt() / 4;
+					if (vertexDataLength / vertexCount != 2) throw new Error("Mesh vertex data malformed");
+					var vertexValues:Vector.<Number> = new Vector.<Number>;
+					var vertexDataString:String = "";
+					for (var i:int = 0; i < vertexDataLength; i++) {
+						vertexValues[i] = ppmBytes.readFloat();
+						if ((i % 2) == 0 && i != 0) vertexDataString += "\n";
+						if (i % 2 == 0) vertexDataString += "\t";
+						vertexDataString += vertexValues[i].toPrecision(5) + "f, ";
+					}
+					var indexCount:uint = ppmBytes.readUnsignedInt();
+					var indexDataLength = ppmBytes.readUnsignedInt() / 4;
+					if (indexDataLength != indexCount) throw new Error("Mesh index data malformed");
+					var indexValues:Vector.<uint> = new Vector.<uint>;
+					var indexDataString:String = "";
+					for (var i:int = 0; i < indexDataLength; i++) {
+						indexValues[i] = ppmBytes.readUnsignedInt();
+						if ((i % 3) == 0 && i != 0) indexDataString += "\n";
+						if (i % 3 == 0) indexDataString += "\t";
+						indexDataString += indexValues[i] + ", ";
+					}
+					template = new meshTemplate();
+					template = template.replace("%%VERTEX_VALUES%%", vertexDataString);
+					template = template.replace("%%INDEX_VALUES%%", indexDataString);
+					template = StringUtils.replaceAllCases(template, "template", baseName);
+					trace(template);
+					break;
+				case "Particles":
+					break;
+				default:
+					throw new Error("Unsupported type. Check the header!");
+			}
+			var cppHeaderBytes:ByteArray = new ByteArray()
+			cppHeaderBytes.endian = Settings.endian;
+			cppHeaderBytes.writeUTFBytes(template);
+			trace(type);
+			return cppHeaderBytes;
 		}
 		
 		private function onEnterFrame(e:Event):void 

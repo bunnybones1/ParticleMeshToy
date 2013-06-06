@@ -57,7 +57,9 @@ package com.bunnybones.particleMeshToy
 			var file:File = new File(ppmFile.url.replace(".ppm", ".h"));
 			var fileStream:FileStream = new FileStream();
 			fileStream.openAsync(file, FileMode.WRITE);
-			fileStream.writeBytes(generateCPPHeaderBytes(ppmBytes));
+			var baseName:String = file.url.substring(file.url.lastIndexOf("/")+1, file.url.lastIndexOf("."));
+			trace(baseName);
+			fileStream.writeBytes(generateCPPHeaderBytes(ppmBytes, baseName));
 			fileStream.close();
 		}
 	}
