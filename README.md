@@ -1,4 +1,5 @@
 ParticleMeshToy
 ===============
 
-A toy to play with particle meshes
+A toy to play with planar particle meshes
+Supports mesh and particle exports
