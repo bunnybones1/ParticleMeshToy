@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy 
 {
+	import flash.geom.Matrix;
 	import flash.utils.Endian;
 	/**
 	 * ...
@@ -17,6 +18,10 @@ package com.bunnybones.particleMeshToy
 		static public var filterByParticleSizeHigh:Number = 100.0;
 		static public var particleScale:Number = 1.0;
 		static public var endian:String = Endian.LITTLE_ENDIAN;
+		static public var uvTransform:Matrix;
+		static public var fixDisplaceUV:Matrix;
+		static public var uvPresetName:String;
+		static public var verticesTotalToInsert:int;
 		
 		public function Settings() 
 		{

@@ -1,4 +1,4 @@
-#example cpp buffer
+//example cpp buffer
 
 #ifndef _QUAD_H_
 #define _QUAD_H_

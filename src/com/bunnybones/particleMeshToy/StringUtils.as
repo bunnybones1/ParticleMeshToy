@@ -28,6 +28,17 @@ package com.bunnybones.particleMeshToy
 			string = replaceAll(string, match.toLowerCase(), replacement.toLowerCase());
 			return string;
 		}
+		
+		static public function trimAway(string:String, charsToTrim:String):String 
+		{
+			for (var i:int = 0; i < charsToTrim.length; i++) 
+			{
+				string = string.split(charsToTrim.substr(i, 1)).join("");
+				trace(string);
+			}
+			string = string.replace(/[\u000d\u000a\u0008\u0020]+/g,""); 
+			return string;
+		}
 	}
 
 }
