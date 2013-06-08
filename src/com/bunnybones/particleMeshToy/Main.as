@@ -183,12 +183,11 @@ package com.bunnybones.particleMeshToy
 		protected function generateCPPHeaderBytes(ppmBytes:ByteArray, baseName:String):ByteArray 
 		{
 			var triangleOffsets:Vector.<Number> = new Vector.<Number>;
-			var particleScale = 0.018;
 			for (var iTri:int = 0; iTri < 6; iTri+=2) {
 				var ratio:Number = iTri / 6;
 				var angle:Number = (ratio * Math.PI * 2) - Math.PI * .5;
-				triangleOffsets[iTri] = Math.cos(angle) * particleScale;
-				triangleOffsets[iTri+1] = Math.sin(angle) * particleScale;
+				triangleOffsets[iTri] = Math.cos(angle);
+				triangleOffsets[iTri+1] = Math.sin(angle);
 			}
 			var template:String;
 			ppmBytes.position = 0;
@@ -267,13 +266,13 @@ package com.bunnybones.particleMeshToy
 						p.x = p.y;
 						p.y = temp;
 						//
-						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[0] * radius + "f, " + triangleOffsets[1] * radius + "f,\n";
-						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[2] * radius + "f, " + triangleOffsets[3] * radius + "f,\n";
-						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[4] * radius + "f, " + triangleOffsets[5] * radius + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + (triangleOffsets[0] * radius).toPrecision(5) + "f, " + (triangleOffsets[1] * radius).toPrecision(5) + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + (triangleOffsets[2] * radius).toPrecision(5) + "f, " + (triangleOffsets[3] * radius).toPrecision(5) + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + (triangleOffsets[4] * radius).toPrecision(5) + "f, " + (triangleOffsets[5] * radius).toPrecision(5) + "f,\n";
 						var uvp:Point = Settings.uvTransform.transformPoint(p);
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[0] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[1] * radius).toPrecision(5) + "f,\n";
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[2] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[3] * radius).toPrecision(5) + "f,\n";
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[4] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[5] * radius).toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[0] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[1] * radius).toPrecision(5) + "f, " + triangleOffsets[0].toPrecision(5) + "f, " + triangleOffsets[1].toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[2] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[3] * radius).toPrecision(5) + "f, " + triangleOffsets[2].toPrecision(5) + "f, " + triangleOffsets[3].toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[4] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[5] * radius).toPrecision(5) + "f, " + triangleOffsets[4].toPrecision(5) + "f, " + triangleOffsets[5].toPrecision(5) + "f,\n";
 						uvp = Settings.fixDisplaceUV.transformPoint(uvp);
 						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
 						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
@@ -304,8 +303,8 @@ package com.bunnybones.particleMeshToy
 					template = StringUtils.replaceAll(template, "%%TIME_OFFSETS_VALUES%%", timeOffsetsDataString);
 					template = StringUtils.replaceAll(template, "%%VERTEX_TOTAL%%", String(vertexCount));
 					template = StringUtils.replaceAll(template, "%%INDEX_TOTAL%%", String(indexCount));
-					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(2));
-					template = StringUtils.replaceAll(template, "%%TEXCOORD_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(4));
+					template = StringUtils.replaceAll(template, "%%TEXCOORD_SIZE%%", String(4));
 					template = StringUtils.replaceAll(template, "%%DISPLACE_SIZE%%", String(1));
 					template = StringUtils.replaceAll(template, "%%TIME_OFFSETS_SIZE%%", String(1));
 					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_SIZE%%", String(2));
