@@ -56,7 +56,7 @@ static const unsigned short templateIndices[TEMPLATE_INDEX_TOTAL] =
 #endif // _TEMPLATE_H_
 
 GLBufferGroup templateGLBufferGroup = {
-    .type = TYPE_RUBBERSHEET,
+    .type = TYPE_PARTICLES,
     
     .verticesSize = TEMPLATE_VERTEX_SIZE,
     .verticesTotal = TEMPLATE_VERTEX_TOTAL,
