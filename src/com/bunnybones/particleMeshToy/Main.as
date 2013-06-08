@@ -182,6 +182,14 @@ package com.bunnybones.particleMeshToy
 		
 		protected function generateCPPHeaderBytes(ppmBytes:ByteArray, baseName:String):ByteArray 
 		{
+			var triangleOffsets:Vector.<Number> = new Vector.<Number>;
+			var particleScale = 0.018;
+			for (var iTri:int = 0; iTri < 6; iTri+=2) {
+				var ratio:Number = iTri / 6;
+				var angle:Number = (ratio * Math.PI * 2) - Math.PI * .5;
+				triangleOffsets[iTri] = Math.cos(angle) * particleScale;
+				triangleOffsets[iTri+1] = Math.sin(angle) * particleScale;
+			}
 			var template:String;
 			ppmBytes.position = 0;
 			var header:String = ppmBytes.readUTF();
@@ -191,13 +199,14 @@ package com.bunnybones.particleMeshToy
 				case "Mesh":
 					var vertexCount:uint = ppmBytes.readUnsignedInt();
 					var vertexDataLength:uint = ppmBytes.readUnsignedInt() / 4;
-					if (vertexDataLength / vertexCount != 2) throw new Error("Mesh vertex data malformed");
+					var valuesPerVertex:int = 2;
+					if (vertexDataLength / vertexCount != valuesPerVertex) throw new Error("Mesh vertex data malformed");
 					var vertexValues:Vector.<Number> = new Vector.<Number>;
 					var vertexDataString:String = "";
 					var texCoordDataString:String = "";
 					var displaceDataString:String = "";
 					var coordsForDisplaceLookupDataString:String = "";
-					for (var i:int = 0; i < vertexDataLength; i += 2) {
+					for (var i:int = 0; i < vertexDataLength; i += valuesPerVertex) {
 						var p:Point = new Point(ppmBytes.readFloat(), ppmBytes.readFloat());
 						//switcheroo
 						var temp:Number = p.x;
@@ -223,17 +232,85 @@ package com.bunnybones.particleMeshToy
 						indexDataString += indexValues[i] + ", ";
 					}
 					template = new meshTemplate();
-					template = template.replace("%%VERTEX_VALUES%%", vertexDataString);
-					template = template.replace("%%INDEX_VALUES%%", indexDataString);
-					template = template.replace("%%TEXCOORD_VALUES%%", texCoordDataString);
-					template = template.replace("%%DISPLACE_VALUES%%", displaceDataString);
-					template = template.replace("%%COORDS_FOR_DISPLACE_LOOKUP_VALUES%%", coordsForDisplaceLookupDataString);
-					template = template.replace("%%VERTEX_TOTAL%%", vertexCount);
-					template = template.replace("%%INDEX_TOTAL%%", indexCount);
+					template = StringUtils.replaceAll(template, "%%VERTEX_VALUES%%", vertexDataString);
+					template = StringUtils.replaceAll(template, "%%INDEX_VALUES%%", indexDataString);
+					template = StringUtils.replaceAll(template, "%%TEXCOORD_VALUES%%", texCoordDataString);
+					template = StringUtils.replaceAll(template, "%%DISPLACE_VALUES%%", displaceDataString);
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_VALUES%%", coordsForDisplaceLookupDataString);
+					template = StringUtils.replaceAll(template, "%%VERTEX_TOTAL%%", String(vertexCount));
+					template = StringUtils.replaceAll(template, "%%INDEX_TOTAL%%", String(indexCount));
+					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%TEXCOORD_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%DISPLACE_SIZE%%", String(1));
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_TOTAL%%", String(vertexCount));
 					template = StringUtils.replaceAllCases(template, "template", baseName);
 					//trace(template);
 					break;
 				case "Particles":
+					var particleCount:uint = ppmBytes.readUnsignedInt();
+					var vertexCount:uint = particleCount * 3;
+					var valuesPerVertex:int = 3;
+					var vertexDataLength:uint = ppmBytes.readUnsignedInt() / 4;
+					if (vertexDataLength / particleCount != valuesPerVertex) throw new Error("Particle vertex data malformed");
+					var vertexValues:Vector.<Number> = new Vector.<Number>;
+					var vertexDataString:String = "";
+					var texCoordDataString:String = "";
+					var displaceDataString:String = "";
+					var coordsForDisplaceLookupDataString:String = "";
+					var timeOffsetsDataString:String = "";
+					for (var i:int = 0; i < vertexDataLength; i += valuesPerVertex) {
+						var p:Point = new Point(ppmBytes.readFloat(), ppmBytes.readFloat());
+						var radius:Number = ppmBytes.readFloat();
+						//switcheroo
+						var temp:Number = p.x;
+						p.x = p.y;
+						p.y = temp;
+						//
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[0] * radius + "f, " + triangleOffsets[1] * radius + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[2] * radius + "f, " + triangleOffsets[3] * radius + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + triangleOffsets[4] * radius + "f, " + triangleOffsets[5] * radius + "f,\n";
+						var uvp:Point = Settings.uvTransform.transformPoint(p);
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[0] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[1] * radius).toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[2] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[3] * radius).toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x + triangleOffsets[4] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[5] * radius).toPrecision(5) + "f,\n";
+						uvp = Settings.fixDisplaceUV.transformPoint(uvp);
+						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
+						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
+						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
+						displaceDataString += "\t0.0f,\n";
+						displaceDataString += "\t0.0f,\n";
+						displaceDataString += "\t0.0f,\n";
+						var timeOffset:Number = Math.random();
+						timeOffsetsDataString += "\t" + timeOffset.toPrecision(5) + "f,\n";
+						timeOffsetsDataString += "\t" + timeOffset.toPrecision(5) + "f,\n";
+						timeOffsetsDataString += "\t" + timeOffset.toPrecision(5) + "f,\n";
+					}
+					var indexCount:uint = vertexCount;
+					var indexValues:Vector.<uint> = new Vector.<uint>;
+					var indexDataString:String = "";
+					for (var i:int = 0; i < indexCount; i++) {
+						indexValues[i] = i;
+						if ((i % 3) == 0 && i != 0) indexDataString += "\n";
+						if (i % 3 == 0) indexDataString += "\t";
+						indexDataString += indexValues[i] + ", ";
+					}
+					template = new particleTemplate();
+					template = StringUtils.replaceAll(template, "%%VERTEX_VALUES%%", vertexDataString);
+					template = StringUtils.replaceAll(template, "%%INDEX_VALUES%%", indexDataString);
+					template = StringUtils.replaceAll(template, "%%TEXCOORD_VALUES%%", texCoordDataString);
+					template = StringUtils.replaceAll(template, "%%DISPLACE_VALUES%%", displaceDataString);
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_VALUES%%", coordsForDisplaceLookupDataString);
+					template = StringUtils.replaceAll(template, "%%TIME_OFFSETS_VALUES%%", timeOffsetsDataString);
+					template = StringUtils.replaceAll(template, "%%VERTEX_TOTAL%%", String(vertexCount));
+					template = StringUtils.replaceAll(template, "%%INDEX_TOTAL%%", String(indexCount));
+					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%TEXCOORD_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%DISPLACE_SIZE%%", String(1));
+					template = StringUtils.replaceAll(template, "%%TIME_OFFSETS_SIZE%%", String(1));
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_TOTAL%%", String(particleCount));
+					template = StringUtils.replaceAllCases(template, "template", baseName);
 					break;
 				default:
 					throw new Error("Unsupported type. Check the header!");
