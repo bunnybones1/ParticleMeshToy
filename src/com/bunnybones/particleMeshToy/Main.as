@@ -21,9 +21,9 @@ package com.bunnybones.particleMeshToy
 	public class Main extends Sprite 
 	{
 		
-		[Embed(source = "../../../../assets/right.png")]
+		[Embed(source = "../../../../assets/left.png")]
 		private static const distributionImage:Class;
-		[Embed(source = "../../../../assets/right.txt", mimeType="application/octet-stream")]
+		[Embed(source = "../../../../assets/left.txt", mimeType="application/octet-stream")]
 		private static const distributionUVTransform:Class;
 		[Embed(source = "../../../../assets/meshTemplate.h", mimeType="application/octet-stream")]
 		private static const meshTemplate:Class;
@@ -44,7 +44,7 @@ package com.bunnybones.particleMeshToy
 		
 		private function init():void
 		{
-			Settings.uvPresetName = "right";
+			Settings.uvPresetName = "left";
 			Settings.verticesTotalToInsert = 120 * 80 * .25;
 			//Settings.verticesTotalToInsert = 30;
 			stage.align = StageAlign.TOP_LEFT;

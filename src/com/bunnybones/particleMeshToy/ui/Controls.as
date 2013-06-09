@@ -48,6 +48,7 @@ package com.bunnybones.particleMeshToy.ui
 			new RadioButton(br, 0, 0, "mesh", true, onTypeSelectMesh);
 			new LabelledSlider(bl, 0, 0, onParticleScaleChange, "Particle Scale");
 			var rs:LabelledRangeSlider = new LabelledRangeSlider(bl, 0, 0, onFilterByParticleSizeChange, "Filter by Particle Size");
+			rs.tick = .1;
 			rs.lowValue = Settings.filterByParticleSizeLow;
 			rs.highValue = Settings.filterByParticleSizeHigh * 100;
 		}
