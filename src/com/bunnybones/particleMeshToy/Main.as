@@ -21,9 +21,9 @@ package com.bunnybones.particleMeshToy
 	public class Main extends Sprite 
 	{
 		
-		[Embed(source = "../../../../assets/left.png")]
+		[Embed(source = "../../../../assets/right.png")]
 		private static const distributionImage:Class;
-		[Embed(source = "../../../../assets/left.txt", mimeType="application/octet-stream")]
+		[Embed(source = "../../../../assets/right.txt", mimeType="application/octet-stream")]
 		private static const distributionUVTransform:Class;
 		[Embed(source = "../../../../assets/meshTemplate.h", mimeType="application/octet-stream")]
 		private static const meshTemplate:Class;
@@ -44,8 +44,9 @@ package com.bunnybones.particleMeshToy
 		
 		private function init():void
 		{
-			Settings.uvPresetName = "left";
-			Settings.verticesTotalToInsert = 120 * 80 * .05;
+			Settings.uvPresetName = "right";
+			Settings.verticesTotalToInsert = 120 * 80 * .25;
+			//Settings.verticesTotalToInsert = 30;
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
 			stage.addEventListener(Event.RESIZE, onResize);
@@ -64,10 +65,11 @@ package com.bunnybones.particleMeshToy
 			var fixDisplaceUV:Matrix = new Matrix();
 			switch(Settings.uvPresetName) {
 				case "right":
-					fixDisplaceUV.translate(-.5, -.5);
-					fixDisplaceUV.rotate(Math.PI * -.5);
-					fixDisplaceUV.scale( 1, -2);
-					fixDisplaceUV.translate(0, -.5);
+					fixDisplaceUV.translate( -.5, -.5);
+					//QUICKFIX?? not sure why commenting this out helps
+					//fixDisplaceUV.rotate(Math.PI * -.5);
+					//fixDisplaceUV.scale( 1, -2);
+					//fixDisplaceUV.translate(0, -.5);
 					fixDisplaceUV.translate(.5, .5);
 				case "left":
 					fixDisplaceUV.translate(-.5, -.5);
@@ -249,6 +251,7 @@ package com.bunnybones.particleMeshToy
 				case "Particles":
 					var particleCount:uint = ppmBytes.readUnsignedInt();
 					var vertexCount:uint = particleCount * 3;
+					var uvScale:Point = new Point(.25, .5);
 					var valuesPerVertex:int = 3;
 					var vertexDataLength:uint = ppmBytes.readUnsignedInt() / 4;
 					if (vertexDataLength / particleCount != valuesPerVertex) throw new Error("Particle vertex data malformed");
@@ -260,7 +263,7 @@ package com.bunnybones.particleMeshToy
 					var timeOffsetsDataString:String = "";
 					for (var i:int = 0; i < vertexDataLength; i += valuesPerVertex) {
 						var p:Point = new Point(ppmBytes.readFloat(), ppmBytes.readFloat());
-						var radius:Number = ppmBytes.readFloat();
+						var radius:Number = ppmBytes.readFloat() * 2;
 						//switcheroo
 						var temp:Number = p.x;
 						p.x = p.y;
@@ -270,13 +273,13 @@ package com.bunnybones.particleMeshToy
 						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + (triangleOffsets[2] * radius).toPrecision(5) + "f, " + (triangleOffsets[3] * radius).toPrecision(5) + "f,\n";
 						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + (triangleOffsets[4] * radius).toPrecision(5) + "f, " + (triangleOffsets[5] * radius).toPrecision(5) + "f,\n";
 						var uvp:Point = Settings.uvTransform.transformPoint(p);
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[0] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[1] * radius).toPrecision(5) + "f, " + triangleOffsets[0].toPrecision(5) + "f, " + triangleOffsets[1].toPrecision(5) + "f,\n";
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[2] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[3] * radius).toPrecision(5) + "f, " + triangleOffsets[2].toPrecision(5) + "f, " + triangleOffsets[3].toPrecision(5) + "f,\n";
-						texCoordDataString += "\t" + (uvp.x + triangleOffsets[4] * radius).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[5] * radius).toPrecision(5) + "f, " + triangleOffsets[4].toPrecision(5) + "f, " + triangleOffsets[5].toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x - triangleOffsets[0] * radius * uvScale.x).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[1] * radius * uvScale.y).toPrecision(5) + "f, " + triangleOffsets[0].toPrecision(5) + "f, " + triangleOffsets[1].toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x - triangleOffsets[2] * radius * uvScale.x).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[3] * radius * uvScale.y).toPrecision(5) + "f, " + triangleOffsets[2].toPrecision(5) + "f, " + triangleOffsets[3].toPrecision(5) + "f,\n";
+						texCoordDataString += "\t" + (uvp.x - triangleOffsets[4] * radius * uvScale.x).toPrecision(5) + "f, " + (uvp.y + triangleOffsets[5] * radius * uvScale.y).toPrecision(5) + "f, " + triangleOffsets[4].toPrecision(5) + "f, " + triangleOffsets[5].toPrecision(5) + "f,\n";
 						uvp = Settings.fixDisplaceUV.transformPoint(uvp);
 						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
-						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
-						coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
+						//coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
+						//coordsForDisplaceLookupDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
 						displaceDataString += "\t0.0f,\n";
 						displaceDataString += "\t0.0f,\n";
 						displaceDataString += "\t0.0f,\n";

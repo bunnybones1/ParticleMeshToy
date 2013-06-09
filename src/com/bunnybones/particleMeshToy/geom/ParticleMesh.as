@@ -261,29 +261,33 @@ package com.bunnybones.particleMeshToy.geom
 									}
 								}
 							}
+							trace("verticesAlreadyCounted", verticesAlreadyCounted.length);
 							break;
 					}
 					switch(Settings.meshType) {
 						case Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES:
 						case Settings.TYPE_PARTICLES_FROM_FACES:
 							//vertices from traingles
+							var tried:int = 0;
+							var remaining:int = 0;
 							for each(var polygon:Polygon in _polygons) {
 								for each(var triangle:Triangle in polygon.triangles) {
 									var faceCenter:Vertex = triangle.getCenter();
 									var faceSize:Number = Math.sqrt(triangle.getSurfaceArea() / Math.PI) * Settings.particleScale;
+									tried++;
 									if (Settings.filterByParticleSizeLow <= faceSize && faceSize <= Settings.filterByParticleSizeHigh) {
 										particleDataBytes.writeFloat(faceCenter.x);
 										particleDataBytes.writeFloat(faceCenter.y);
 										particleDataBytes.writeFloat(faceSize);
+										remaining++;
 									}
 								}
 							}
+							trace("tried", tried);
+							trace("remaining", remaining);
 							break;
 					}
 					
-					for each(var polygon:Polygon in _polygons) {
-						polygon.serializeParticles(particleDataBytes);
-					}
 					var totalParticles:uint = particleDataBytes.length / 12;
 					dataBytes.writeUnsignedInt(totalParticles);
 					dataBytes.writeUnsignedInt(particleDataBytes.length);
