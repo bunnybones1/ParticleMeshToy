@@ -11,16 +11,18 @@ package com.bunnybones.particleMeshToy.geom
 		static private var _ID:uint = 0;
 		private var _x:Number;
 		private var _y:Number;
+		private var _z:Number;
 		private var _edges:Vector.<Edge>;
 		private var _destroyer:Signal = new Signal(Vertex);
 		private var _updater:Signal = new Signal(Vertex);
 		private var _weight:Number;
 		private var _id:uint;
 		
-		public function Vertex(x:Number, y:Number, weight:Number = 1) 
+		public function Vertex(x:Number, y:Number, z:Number, weight:Number = 1) 
 		{
 			_x = x;
 			_y = y;
+			_z = z;
 			_weight = weight;
 			_edges = new Vector.<Edge>;
 			_id = Vertex.ID;
@@ -45,6 +47,17 @@ package com.bunnybones.particleMeshToy.geom
 		public function set y(value:Number):void 
 		{
 			_y = value;
+			_updater.dispatch(this);
+		}
+		
+		public function get z():Number 
+		{
+			return _z;
+		}
+		
+		public function set z(value:Number):void 
+		{
+			_z = value;
 			_updater.dispatch(this);
 		}
 		
@@ -83,10 +96,11 @@ package com.bunnybones.particleMeshToy.geom
 			return _id;
 		}
 		
-		public function setXY(x:Number, y:Number):void
+		public function setXYZ(x:Number, y:Number, z:Number):void
 		{
 			_x = x;
 			_y = y;
+			_z = z;
 			_updater.dispatch(this);
 		}
 		
@@ -113,20 +127,22 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function clone():Vertex 
 		{
-			return new Vertex(x, y);
+			return new Vertex(x, y, z);
 		}
 		
-		public function scale(scaleX:Number, scaleY:Number):Vertex
+		public function scale(scaleX:Number, scaleY:Number, scaleZ:Number):Vertex
 		{
 			x *= scaleX;
 			y *= scaleY;
+			z *= scaleZ;
 			return this;
 		}
 		
-		public function offset(offsetX:Number, offsetY:Number):Vertex
+		public function offset(offsetX:Number, offsetY:Number, offsetZ:Number):Vertex
 		{
 			x += offsetX;
 			y += offsetY;
+			z += offsetZ;
 			return this;
 		}
 		
@@ -134,6 +150,7 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			x = -x;
 			y = -y;
+			z = -z;
 			return this;
 		}
 		
@@ -141,6 +158,7 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			this.x += vertex.x;
 			this.y += vertex.y;
+			this.z += vertex.z;
 			return this;
 		}
 		
@@ -148,6 +166,7 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			this.x -= vertex.x;
 			this.y -= vertex.y;
+			this.z -= vertex.z;
 			return this;
 		}
 		
@@ -162,6 +181,7 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			bytes.writeFloat(_x);
 			bytes.writeFloat(_y);
+			bytes.writeFloat(_z);
 			return bytes;
 		}
 		
@@ -179,6 +199,20 @@ package com.bunnybones.particleMeshToy.geom
 				}
 			}
 			return length/_edges.length;
+		}
+		
+		public function subtractVxy(vertex:Vertex):Vertex
+		{
+			this.x -= vertex.x;
+			this.y -= vertex.y;
+			return this;
+		}
+		
+		public function addVxy(vertex:Vertex):Vertex
+		{
+			this.x += vertex.x;
+			this.y += vertex.y;
+			return this;
 		}
 	}
 

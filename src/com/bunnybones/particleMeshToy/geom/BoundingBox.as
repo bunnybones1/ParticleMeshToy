@@ -63,7 +63,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function randomVertex():Vertex
 		{
-			return new Vertex(xMin + Math.random() * (xMax - xMin), yMin + Math.random() * (yMax - yMin));
+			return new Vertex(xMin + Math.random() * (xMax - xMin), yMin + Math.random() * (yMax - yMin), 0);
 		}
 		
 	}

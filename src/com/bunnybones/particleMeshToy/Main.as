@@ -2,6 +2,7 @@ package com.bunnybones.particleMeshToy
 {
 	import com.bunnybones.particleMeshToy.geom.ParticleMesh;
 	import com.bunnybones.particleMeshToy.ui.Controls;
+	import com.bunnybones.particleMeshToy.ui.ControlsEvent;
 	import flash.display.Bitmap;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -21,14 +22,20 @@ package com.bunnybones.particleMeshToy
 	public class Main extends Sprite 
 	{
 		
-		[Embed(source = "../../../../assets/left.png")]
+		[Embed(source = "../../../../assets/right.png")]
 		private static const distributionImage:Class;
-		[Embed(source = "../../../../assets/left.txt", mimeType="application/octet-stream")]
+		[Embed(source = "../../../../assets/rightMask.png")]
+		private static const heightImage:Class;
+		[Embed(source = "../../../../assets/right.txt", mimeType="application/octet-stream")]
 		private static const distributionUVTransform:Class;
 		[Embed(source = "../../../../assets/meshTemplate.h", mimeType="application/octet-stream")]
 		private static const meshTemplate:Class;
 		[Embed(source = "../../../../assets/particleTemplate.h", mimeType="application/octet-stream")]
 		private static const particleTemplate:Class;
+		[Embed(source = "../../../../assets/motionVectorParticleTemplate.h", mimeType="application/octet-stream")]
+		private static const motionVectorParticleTemplate:Class;
+		[Embed(source = "../../../../assets/framesTemplate.h", mimeType="application/octet-stream")]
+		private static const framesTemplate:Class;
 		
 		protected var particleMesh:ParticleMesh;
 		private var viewMatrix:Matrix;
@@ -36,6 +43,11 @@ package com.bunnybones.particleMeshToy
 		private var controls:Controls;
 		private var canvas:Sprite;
 		private var ready:Boolean;
+		private var distributionMap:Bitmap;
+		private var heightMap:Bitmap;
+		protected var currentFrame:int = 0;
+		protected var exportingFrames:Boolean = false;
+		protected var baseFileName:String;
 		public function Main():void 
 		{
 			if (stage) init();
@@ -44,8 +56,7 @@ package com.bunnybones.particleMeshToy
 		
 		private function init():void
 		{
-			Settings.uvPresetName = "left";
-			Settings.verticesTotalToInsert = 120 * 80 * .25;
+			Settings.uvPresetName = "right";
 			//Settings.verticesTotalToInsert = 30;
 			stage.align = StageAlign.TOP_LEFT;
 			stage.scaleMode = StageScaleMode.NO_SCALE;
@@ -57,9 +68,13 @@ package com.bunnybones.particleMeshToy
 			controls = new Controls();
 			controls.addEventListener(Event.CHANGE, onControlsChange);
 			controls.addEventListener(Event.SELECT, onControlsSelect);
+			controls.addEventListener(ControlsEvent.RESET, onControlsReset);
+			controls.addEventListener(ControlsEvent.GO, onControlsGo);
+			
 			addChild(controls);
 			
-			var distributionMap:Bitmap = new distributionImage();
+			distributionMap = new distributionImage();
+			heightMap = new heightImage();
 			var uv:Matrix = matrixFromUVTransformTextFile(new distributionUVTransform());
 			Settings.uvTransform = uv;
 			var fixDisplaceUV:Matrix = new Matrix();
@@ -81,14 +96,27 @@ package com.bunnybones.particleMeshToy
 			}
 			Settings.fixDisplaceUV = fixDisplaceUV;
 			
-			particleMesh = new ParticleMesh();
-			particleMesh.distributionMap = distributionMap.bitmapData;
-			particleMesh.addRandomVertices(Settings.verticesTotalToInsert);
-			//particleMesh.addRandomVertices(10);
+			reset();
 			
 			addEventListener(Event.ENTER_FRAME, onEnterFrame);
 			ready = true;
-			drawMesh();
+		}
+		
+		private function onControlsGo(e:ControlsEvent):void 
+		{
+			if (exportingFrames) {
+				trace("already going");
+				return;
+			}
+			trace("go");
+			exportingFrames = true;
+			save();
+			iterations = Settings.relaxIterations;
+		}
+		
+		private function onControlsReset(e:ControlsEvent):void 
+		{
+			reset();
 		}
 		
 		private function matrixFromUVTransformTextFile(distributionUVTransformText:String):Matrix 
@@ -170,6 +198,21 @@ package com.bunnybones.particleMeshToy
 						break;
 				}
 			}
+			if (e.keyCode == Keyboard.R) {
+				reset();
+			}
+		}
+		
+		private function reset():void 
+		{
+			particleMesh = new ParticleMesh();
+			particleMesh.distributionMap = distributionMap.bitmapData;
+			particleMesh.heightMap = heightMap.bitmapData;
+			trace(Settings.totalVerticesToInsert);
+			particleMesh.addRandomVertices(Settings.totalVerticesToInsert);
+			//particleMesh.addRandomVertices(10);
+			drawMesh();
+			iterations = Settings.relaxIterations;
 		}
 		
 		protected function save():void 
@@ -184,6 +227,7 @@ package com.bunnybones.particleMeshToy
 		
 		protected function generateCPPHeaderBytes(ppmBytes:ByteArray, baseName:String):ByteArray 
 		{
+			baseName = StringUtils.replaceAll(baseName, ".", "_");
 			var triangleOffsets:Vector.<Number> = new Vector.<Number>;
 			for (var iTri:int = 0; iTri < 6; iTri+=2) {
 				var ratio:Number = iTri / 6;
@@ -200,7 +244,7 @@ package com.bunnybones.particleMeshToy
 				case "Mesh":
 					var vertexCount:uint = ppmBytes.readUnsignedInt();
 					var vertexDataLength:uint = ppmBytes.readUnsignedInt() / 4;
-					var valuesPerVertex:int = 2;
+					var valuesPerVertex:int = 3;
 					if (vertexDataLength / vertexCount != valuesPerVertex) throw new Error("Mesh vertex data malformed");
 					var vertexValues:Vector.<Number> = new Vector.<Number>;
 					var vertexDataString:String = "";
@@ -209,12 +253,13 @@ package com.bunnybones.particleMeshToy
 					var coordsForDisplaceLookupDataString:String = "";
 					for (var i:int = 0; i < vertexDataLength; i += valuesPerVertex) {
 						var p:Point = new Point(ppmBytes.readFloat(), ppmBytes.readFloat());
+						var height:Number = ppmBytes.readFloat();
 						//switcheroo
 						var temp:Number = p.x;
 						p.x = p.y;
 						p.y = temp;
 						//
-						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f,\n";
+						vertexDataString += "\t" + p.x.toPrecision(5) + "f, " + p.y.toPrecision(5) + "f, " + height.toPrecision(5) + "f,\n";
 						var uvp:Point = Settings.uvTransform.transformPoint(p);
 						texCoordDataString += "\t" + uvp.x.toPrecision(5) + "f, " + uvp.y.toPrecision(5) + "f,\n";
 						uvp = Settings.fixDisplaceUV.transformPoint(uvp);
@@ -240,7 +285,7 @@ package com.bunnybones.particleMeshToy
 					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_VALUES%%", coordsForDisplaceLookupDataString);
 					template = StringUtils.replaceAll(template, "%%VERTEX_TOTAL%%", String(vertexCount));
 					template = StringUtils.replaceAll(template, "%%INDEX_TOTAL%%", String(indexCount));
-					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(2));
+					template = StringUtils.replaceAll(template, "%%VERTEX_SIZE%%", String(3));
 					template = StringUtils.replaceAll(template, "%%TEXCOORD_SIZE%%", String(2));
 					template = StringUtils.replaceAll(template, "%%DISPLACE_SIZE%%", String(1));
 					template = StringUtils.replaceAll(template, "%%COORDS_FOR_DISPLACE_LOOKUP_SIZE%%", String(2));
@@ -333,8 +378,12 @@ package com.bunnybones.particleMeshToy
 				particleMesh.relax();
 				particleMesh.draw(canvas, viewMatrix);
 			} else if (iterations == 0) {
-				iterations--;
-				stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				if (exportingFrames) {
+					save();
+				} else {
+					iterations--;
+					stage.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown);
+				}
 			}
 		}
 		

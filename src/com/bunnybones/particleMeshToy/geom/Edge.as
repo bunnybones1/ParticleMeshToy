@@ -139,10 +139,10 @@ package com.bunnybones.particleMeshToy.geom
 			var ratio:Number = vertex1.weight / (vertex1.weight + vertex2.weight);
 			var ratioInv:Number = 1 - ratio;
 			if (ratio != 0) {
-				vertex1.subtract(vec.clone().scale(ratio, ratio));
+				vertex1.subtractVxy(vec.clone().scale(ratio, ratio, ratio));
 			}
 			if (ratioInv != 0) {
-				vertex2.add(vec.clone().scale(ratioInv, ratioInv));
+				vertex2.addVxy(vec.clone().scale(ratioInv, ratioInv, ratioInv));
 			}
 		}
 		

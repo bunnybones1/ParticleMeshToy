@@ -16,6 +16,7 @@ package com.bunnybones.particleMeshToy.geom
 	public class ParticleMesh 
 	{
 		private var _distributionMap:BitmapData;
+		private var _heightMap:BitmapData;
 		private var _polygons:Vector.<Polygon>;
 		private var _distributionIndex:Vector.<Vector.<Vertex>>;
 		private var _distributionIndexLinear:Vector.<Vector.<Vertex>>;
@@ -25,10 +26,10 @@ package com.bunnybones.particleMeshToy.geom
 		public function ParticleMesh() 
 		{
 			_polygons = new Vector.<Polygon>;
-			newPolyFromCorners(	new Vertex( -1, -1, 0),
-								new Vertex(1, -1, 0),
-								new Vertex(-1, 1, 0),
-								new Vertex(1, 1, 0));
+			newPolyFromCorners(	new Vertex( -1, -1, 0, 0),
+								new Vertex(1, -1, 0, 0),
+								new Vertex(-1, 1, 0, 0),
+								new Vertex(1, 1, 0, 0));
 			moireData = new BitmapData(2, 2, false, 0xffffff);
 			moireData.setPixel(0, 0, 0);
 			moireData.setPixel(1, 1, 0);
@@ -59,7 +60,9 @@ package com.bunnybones.particleMeshToy.geom
 								vertex = triangle.vertices[0];
 								p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
 								g.moveTo(p.x, p.y);
-								g.beginFill(triangle.generateColor(), .5);
+								if (triangle.getAverageHeight() > 0) g.lineStyle(1, 0, .5);
+								else g.lineStyle(1, 0, 0);
+								g.beginFill(triangle.generateColor(), triangle.generateAlpha());
 								for (var i:int = 1; i < triangle.vertices.length; ++i) {
 									vertex = triangle.vertices[i];
 									p = viewMatrix.transformPoint(new Point(vertex.x, vertex.y));
@@ -120,9 +123,9 @@ package com.bunnybones.particleMeshToy.geom
 			for (var i:int = 0; i < total; i++) 
 			{
 				if (_distributionMap) {
-					_polygons[0].insertVertex(sampleDistributionMap().add(fudgeBox.randomVertex()).scale(2, 2).offset(-1,-1));
+					_polygons[0].insertVertex(sampleDistributionMap().add(fudgeBox.randomVertex()).scale(2, 2, 2).offset(-1,-1, -1));
 				} else {
-					_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1));
+					_polygons[0].insertVertex(new Vertex(Math.random() * 2 - 1, Math.random() * 2 -1, 0));
 				}
 			}
 		}
@@ -130,6 +133,7 @@ package com.bunnybones.particleMeshToy.geom
 		private function sampleDistributionMap():Vertex
 		{
 			var vertex:Vertex;
+			var height:Number = 0;
 			while(!vertex) {
 				//var valueIndex:int = int((1 - Math.pow(Math.random(), 3)) * 256);
 				var valueIndex:int = Math.random() * _distributionIndexLinear.length;
@@ -138,8 +142,16 @@ package com.bunnybones.particleMeshToy.geom
 				if(vertices.length > 0) {
 					vertex = vertices[int(Math.random() * vertices.length)];
 				}
+				if(_heightMap) {
+					height = sampleHeightMap(vertex.x, vertex.y);
+				}
 			}
-			return vertex.clone();
+			return vertex.clone().add(new Vertex(0, 0, height));
+		}
+		
+		private function sampleHeightMap(x:Number, y:Number):Number 
+		{
+			return ((_heightMap.getPixel(x * _heightMap.width, y * _heightMap.height) >> 8 ) & 0xFF) / 255;
 		}
 		
 		public function retriangulate():void 
@@ -154,6 +166,9 @@ package com.bunnybones.particleMeshToy.geom
 		{
 			for each(var polygon:Polygon in _polygons) {
 				polygon.relax();
+				for each(var vertex:Vertex in polygon.vertices) {
+					vertex.z = sampleHeightMap(vertex.x * .5 + .5, vertex.y * .5 + .5);
+				}
 			}
 		}
 		
@@ -173,7 +188,7 @@ package com.bunnybones.particleMeshToy.geom
 				case Settings.TYPE_MESH:
 					header = "Mesh.\n" +
 					"Read uint for vertexCount.\n" +
-					"Then read uint for size of data block containing vertex stream: vertexCount * (float x, float y).\n" +
+					"Then read uint for size of data block containing vertex stream: vertexCount * (float x, float y, float mask).\n" +
 					"Then read vertex data stream.\n" +
 					
 					"Then read uint for indexCount.\n" +
@@ -224,6 +239,7 @@ package com.bunnybones.particleMeshToy.geom
 					for (var i:int = 0; i < vertices.length; i++) {
 						vertexBytes.writeFloat(vertices[i].x);
 						vertexBytes.writeFloat(vertices[i].y);
+						vertexBytes.writeFloat(vertices[i].z);
 					}
 					var indexBytes:ByteArray = new ByteArray();
 					indexBytes.endian = Settings.endian;
@@ -313,7 +329,7 @@ package com.bunnybones.particleMeshToy.geom
 			for (var iy:int = 0; iy < height; ++iy) {
 				for (var ix:int = 0; ix < width; ++ix) {
 					var value:uint = (mapData.getPixel(ix, iy) >> 16 ) & 0xFF;
-					_distributionIndex[value].push(new Vertex(ix / width, iy / height));
+					_distributionIndex[value].push(new Vertex(ix / width, iy / height, 0));
 					valueCounts[value]++;
 				}
 			}
@@ -326,8 +342,13 @@ package com.bunnybones.particleMeshToy.geom
 					}
 				}
 			}
-			var fudgeVert:Vertex = new Vertex(1 / _distributionMap.width, 1 / _distributionMap.height).scale(.5, .5);
+			var fudgeVert:Vertex = new Vertex(1 / _distributionMap.width, 1 / _distributionMap.height, 0).scale(.5, .5, .5);
 			fudgeBox.setFromTwoVertices(fudgeVert, fudgeVert.clone().invert());
+		}
+		
+		public function set heightMap(value:BitmapData):void 
+		{
+			_heightMap = value;
 		}
 		
 	}

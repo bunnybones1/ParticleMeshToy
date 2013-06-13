@@ -94,8 +94,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function generateAlpha():Number 
 		{
-			if (getAverageEdgeLength() < Settings.SIZE_THRESHOLD) return 1;
-			else return .5;
+			return getAverageHeight();
 			//return 1-Math.pow(1-Math.min(1, .0001/generateArea()), 6);
 		}
 		
@@ -121,7 +120,7 @@ package com.bunnybones.particleMeshToy.geom
 		
 		public function getCenter():Vertex
 		{
-			return _vertices[0].clone().add(_vertices[1]).add(_vertices[2]).scale(MathUtils.A_THIRD, MathUtils.A_THIRD);
+			return _vertices[0].clone().add(_vertices[1]).add(_vertices[2]).scale(MathUtils.A_THIRD, MathUtils.A_THIRD, MathUtils.A_THIRD);
 		}
 		
 		public function getSurfaceArea():Number
@@ -160,6 +159,11 @@ package com.bunnybones.particleMeshToy.geom
 		public function getAverageEdgeLength():Number 
 		{
 			return (_edges[0].length + _edges[1].length + _edges[2].length) / 3;
+		}
+		
+		public function getAverageHeight():Number 
+		{
+			return (_vertices[0].z + _vertices[1].z + _vertices[2].z) * MathUtils.A_THIRD;
 		}
 		
 	}

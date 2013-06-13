@@ -21,7 +21,9 @@ package com.bunnybones.particleMeshToy
 		static public var uvTransform:Matrix;
 		static public var fixDisplaceUV:Matrix;
 		static public var uvPresetName:String;
-		static public var verticesTotalToInsert:int;
+		static public var totalFrames:int = 1;
+		static public var relaxIterations:int = 0;
+		static public var totalVerticesToInsert:int = 120*80*.25;
 		
 		public function Settings() 
 		{

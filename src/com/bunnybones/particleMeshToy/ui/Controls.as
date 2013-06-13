@@ -1,9 +1,12 @@
 package com.bunnybones.particleMeshToy.ui 
 {
+	import com.bit101.components.HSlider;
 	import com.bit101.components.LabelledRangeSlider;
 	import com.bit101.components.LabelledSlider;
+	import com.bit101.components.PushButton;
 	import com.bit101.components.RadioButton;
 	import com.bit101.components.Slider;
+	import com.bit101.components.VSlider;
 	import com.bunnybones.particleMeshToy.Settings;
 	import flash.display.Sprite;
 	import flash.display.StageAlign;
@@ -51,6 +54,54 @@ package com.bunnybones.particleMeshToy.ui
 			rs.tick = .1;
 			rs.lowValue = Settings.filterByParticleSizeLow;
 			rs.highValue = Settings.filterByParticleSizeHigh * 100;
+			
+			var totalVerticesToInsertSlider:LabelledSlider = new LabelledSlider(tl, 0, 0, onTotalVerticesToInsertChanged, "Total Vertices To Insert", Settings.totalVerticesToInsert, 200);
+			totalVerticesToInsertSlider.tick = 10;
+			totalVerticesToInsertSlider.minimum = 10;
+			totalVerticesToInsertSlider.maximum = 120 * 80;
+			totalVerticesToInsertSlider.value = Settings.totalVerticesToInsert;
+			var totalFramesSlider:LabelledSlider = new LabelledSlider(tl, 0, 0, onTotalFramesChanged, "Total Frames", Settings.totalFrames);
+			totalFramesSlider.tick = 1;
+			totalFramesSlider.minimum = 1;
+			totalFramesSlider.maximum = 30;
+			var relaxIterationsSlider:LabelledSlider = new LabelledSlider(tl, 0, 0, onTotalFramesChanged, "Relax Iterations", Settings.relaxIterations);
+			relaxIterationsSlider.tick = 1;
+			relaxIterationsSlider.minimum = 0;
+			relaxIterationsSlider.maximum = 10;
+			
+			new PushButton(tl, 0, 0, "RESET", onClickReset);
+			new PushButton(tl, 0, 0, "GO", onClickGo);
+		}
+		
+		private function onTotalVerticesToInsertChanged(e:Event = null):void 
+		{
+			//trace(e);
+			var slider:LabelledSlider = e.target as LabelledSlider;
+			Settings.totalVerticesToInsert = slider.value;
+		}
+		
+		private function onTotalFramesChanged(e:Event = null):void 
+		{
+			//trace(e);
+			var slider:LabelledSlider = e.target as LabelledSlider;
+			Settings.totalFrames = slider.value;
+		}
+		
+		private function onRelaxIterationsChanged(e:Event = null):void 
+		{
+			//trace(e);
+			var slider:LabelledSlider = e.target as LabelledSlider;
+			Settings.relaxIterations = slider.value;
+		}
+		
+		private function onClickGo(e:Event = null):void 
+		{
+			dispatchEvent(new ControlsEvent(ControlsEvent.GO));
+		}
+		
+		private function onClickReset(e:Event = null):void 
+		{
+			dispatchEvent(new ControlsEvent(ControlsEvent.RESET));
 		}
 		
 		private function onTypeSelectMesh(e:Event):void 
