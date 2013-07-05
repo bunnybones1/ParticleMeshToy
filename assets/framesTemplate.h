@@ -6,7 +6,7 @@
 %%INCLUDE_HEADERS_LIST%%
 
 GLBufferGroup *templateFrames[MAX_FRAMES_PER_LAYER] = {
-	%%FRAME_LIST%%
-}
+%%FRAME_LIST%%
+};
 
 #endif

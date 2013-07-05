@@ -39,6 +39,15 @@ package com.bunnybones.particleMeshToy
 			string = string.replace(/[\u000d\u000a\u0008\u0020]+/g,""); 
 			return string;
 		}
+		
+		static public function addMultipleTimes(string:String, addition:String, times:int):String 
+		{
+			for (var i:int = 0; i < times; i++) 
+			{
+				string += addition;
+			}
+			return string;
+		}
 	}
 
 }

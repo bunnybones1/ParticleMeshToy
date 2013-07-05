@@ -1,5 +1,6 @@
 package com.bunnybones.particleMeshToy.ui 
 {
+	import com.bit101.components.CheckBox;
 	import com.bit101.components.HSlider;
 	import com.bit101.components.LabelledRangeSlider;
 	import com.bit101.components.LabelledSlider;
@@ -49,6 +50,7 @@ package com.bunnybones.particleMeshToy.ui
 			new RadioButton(br, 0, 0, "particles from faces", true, onTypeSelectParticlesFromFaces);
 			new RadioButton(br, 0, 0, "particles from vertices", true, onTypeSelectParticlesFromVertices);
 			new RadioButton(br, 0, 0, "mesh", true, onTypeSelectMesh);
+			new CheckBox(br, 0, 0, "is Motion Vector Buffer", onTypeSelectIsMotionVector);
 			new LabelledSlider(bl, 0, 0, onParticleScaleChange, "Particle Scale");
 			var rs:LabelledRangeSlider = new LabelledRangeSlider(bl, 0, 0, onFilterByParticleSizeChange, "Filter by Particle Size");
 			rs.tick = .1;
@@ -64,7 +66,7 @@ package com.bunnybones.particleMeshToy.ui
 			totalFramesSlider.tick = 1;
 			totalFramesSlider.minimum = 1;
 			totalFramesSlider.maximum = 30;
-			var relaxIterationsSlider:LabelledSlider = new LabelledSlider(tl, 0, 0, onTotalFramesChanged, "Relax Iterations", Settings.relaxIterations);
+			var relaxIterationsSlider:LabelledSlider = new LabelledSlider(tl, 0, 0, onRelaxIterationsChanged, "Relax Iterations", Settings.relaxIterations);
 			relaxIterationsSlider.tick = 1;
 			relaxIterationsSlider.minimum = 0;
 			relaxIterationsSlider.maximum = 10;
@@ -82,9 +84,10 @@ package com.bunnybones.particleMeshToy.ui
 		
 		private function onTotalFramesChanged(e:Event = null):void 
 		{
-			//trace(e);
+			trace(e);
 			var slider:LabelledSlider = e.target as LabelledSlider;
 			Settings.totalFrames = slider.value;
+			trace(slider.value);
 		}
 		
 		private function onRelaxIterationsChanged(e:Event = null):void 
@@ -125,6 +128,13 @@ package com.bunnybones.particleMeshToy.ui
 		private function onTypeSelectParticlesFromFacesAndVertices(e:Event):void 
 		{
 			Settings.meshType = Settings.TYPE_PARTICLES_FROM_FACES_AND_VERTICES;
+			dispatchEvent(new Event(Event.SELECT));
+		}
+		
+		private function onTypeSelectIsMotionVector(e:Event):void 
+		{
+			var checkBox:CheckBox = e.target as CheckBox;
+			Settings.isMotionVector = checkBox.selected;
 			dispatchEvent(new Event(Event.SELECT));
 		}
 		

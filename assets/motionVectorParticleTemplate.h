@@ -48,7 +48,7 @@ static const unsigned short templateIndices[TEMPLATE_INDEX_TOTAL] =
 #endif // _TEMPLATE_H_
 
 GLBufferGroup templateGLBufferGroup = {
-    .type = TYPE_MOTION_VECTOR_PARTICLES,
+    .type = TYPE_MOTION_PARTICLES,
     
     .verticesSize = TEMPLATE_VERTEX_SIZE,
     .verticesTotal = TEMPLATE_VERTEX_TOTAL,
@@ -68,6 +68,4 @@ GLBufferGroup templateGLBufferGroup = {
     
     .indicesTotal = TEMPLATE_INDEX_TOTAL,
     .indices = templateIndices,
-	
-    .frameTimeOffset = %%FRAME_TIME_OFFSET%%,
 };
